@@ -35,7 +35,24 @@ static constexpr float MMU2_LOAD_TO_NOZZLE_LENGTH = 87.0F + 5.0F;
 // in the profile
 static constexpr float MMU2_TOOL_CHANGE_LOAD_LENGTH = 30.0F;
 
-static constexpr float MMU2_LOAD_TO_NOZZLE_FEED_RATE = 20.0F;
+static constexpr float MMU2_LOAD_TO_NOZZLE_FEED_RATE = 20.0F; // mm/s
+static constexpr float MMU2_UNLOAD_TO_FINDA_FEED_RATE = 120.0F; // mm/s
+
+// The first the MMU does is initialise its axis. Meanwhile the E-motor will unload 10mm of filament in approx. 1 second.
+static constexpr float MMU2_RETRY_UNLOAD_TO_FINDA_START_LENGTH = 10.0f; // mm
+static constexpr float MMU2_RETRY_UNLOAD_TO_FINDA_START_FEED_RATE = 10.0f; // mm/s
+
+// This is -config::defaultBowdenLength - config::feedToFinda - config::filamentMinLoadedToMMU
+// To prevent an error 'too long extrusion prevented' this distance is split into two constants:
+static constexpr float MMU2_RETRY_UNLOAD_TO_FINDA_BOWDEN_LENGTH = 427.0f; // mm
+static constexpr float MMU2_RETRY_UNLOAD_TO_FINDA_EXTRA_LENGTH = 42.85f + 20.0f; // mm
+
+// The E-motor must move endlessly until the MMU raises an error, or the FINDA untriggers
+// This must be non-blocking for the MMU communications, so we need to unload small segments of
+// filament at a time. A fine balance is 6mm of filament at 60mm/s. Though this can be fine tuned.
+static constexpr float MMU2_RETRY_UNLOAD_TO_FINDA_FINE_STEP_LENGTH = 6.0f; // mm
+static constexpr float MMU2_RETRY_UNLOAD_TO_FINDA_FINE_STEP_FEED_RATE = 60.0f; // mm/s
+
 static constexpr uint8_t MMU2_NO_TOOL = 99;
 static constexpr uint32_t MMU_BAUD = 115200;
 
@@ -93,6 +110,7 @@ MMU2::MMU2()
     , state(xState::Stopped)
     , mmu_print_saved(SavedState::None)
     , loadFilamentStarted(false)
+    , unloadFilamentStarted(false)
     , loadingToNozzle(false)
 {
 }
@@ -733,6 +751,21 @@ void MMU2::ReportError(ErrorCode ec, uint8_t res) {
     // - report only changes of states (we can miss an error message)
     // - may be some combination of MMUAvailable + UseMMU flags and decide based on their state
     // Right now the filtering of MMU_NOT_RESPONDING is done in ReportErrorHook() as it is not a problem if mmu2.cpp
+
+    // Depending on the Progress code, we may want to do some action when an error occurs
+    switch (logic.Progress())
+    {
+    case ProgressCode::UnloadingToFinda:
+        unloadFilamentStarted = false;
+    case ProgressCode::FeedingToBondtech:
+    case ProgressCode::FeedingToFSensor:
+        // FSENSOR error during load. Make sure E-motor stops moving.
+        loadFilamentStarted = false;
+        break;
+    default:
+        break;
+    }
+
     ReportErrorHook((uint16_t)ec, res);
 
     if( ec != lastErrorCode ){ // deduplicate: only report changes in error codes into the log
@@ -765,6 +798,29 @@ void MMU2::OnMMUProgressMsg(ProgressCode pc){
 
         // Act accordingly - one-time handling
         switch (pc) {
+        case ProgressCode::UnloadingToFinda:
+            if ((CommandInProgress)logic.CommandInProgress() == CommandInProgress::UnloadFilament)
+            {
+                // If MK3S sent U0 command, then the code below is not relevant.
+                break;
+            }
+
+            // This is intended to handle Retry option on MMU error screen
+            // MMU sends P3 progress code during Query, and if filament is stuck
+            // in the gears, the MK3S needs to move e-axis as well.
+            st_synchronize();
+            unloadFilamentStarted = true;
+            // Unload slowly while MMU is initialising its axis
+            current_position[E_AXIS] -= MMU2_RETRY_UNLOAD_TO_FINDA_START_LENGTH;
+            plan_buffer_line_curposXYZE(MMU2_RETRY_UNLOAD_TO_FINDA_START_FEED_RATE);
+            st_synchronize();
+            // Now do a fast unload in sync with the MMU
+            current_position[E_AXIS] -= MMU2_RETRY_UNLOAD_TO_FINDA_EXTRA_LENGTH;
+            plan_buffer_line_curposXYZE(MMU2_UNLOAD_TO_FINDA_FEED_RATE);
+            st_synchronize();
+            current_position[E_AXIS] -= MMU2_RETRY_UNLOAD_TO_FINDA_BOWDEN_LENGTH; // Roughly same distance as MMU plans
+            plan_buffer_line_curposXYZE(MMU2_UNLOAD_TO_FINDA_FEED_RATE);
+            break;
         case ProgressCode::FeedingToBondtech:
             // prepare for the movement of the E-motor
             st_synchronize();
@@ -777,6 +833,21 @@ void MMU2::OnMMUProgressMsg(ProgressCode pc){
     } else {
         // Act accordingly - every status change (even the same state)
         switch (pc) {
+        case ProgressCode::UnloadingToFinda:
+            if (unloadFilamentStarted && !blocks_queued()) { // Only plan a move if there is no move ongoing
+                
+                if (mmu2.FindaDetectsFilament() == 1)
+                {
+                    // We cannot rely on the FSENSOR reading to stop the E-motor
+                    // because the filament can get stuck in the bondtech gears.
+                    // Use FINDA instead.
+                    current_position[E_AXIS] -= MMU2_RETRY_UNLOAD_TO_FINDA_FINE_STEP_LENGTH;
+                    plan_buffer_line_curposXYZE(MMU2_RETRY_UNLOAD_TO_FINDA_FINE_STEP_FEED_RATE);
+                } else {
+                    unloadFilamentStarted = false;
+                }
+            }
+            break;
         case ProgressCode::FeedingToBondtech:
         case ProgressCode::FeedingToFSensor:
             if (loadFilamentStarted) {

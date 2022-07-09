@@ -5539,16 +5539,9 @@ static void mmu_cut_filament_menu() {
         for (uint8_t i = 0; i < MMU_FILAMENT_COUNT; i++)
             MENU_ITEM_FUNCTION_NR_P(_T(MSG_CUT_FILAMENT), i + '1', mmu_cut_filament_wrapper, i); ////MSG_CUT_FILAMENT c=16
         MENU_END();
-    }
-    else
-    {
-        eFilamentAction=FilamentAction::MmuCut;
-        if(target_temperature[0]>=EXTRUDE_MINTEMP)
-        {
-            bFilamentPreheatState=true;
-            mFilamentItem(target_temperature[0],target_temperature_bed);
-        }
-        else lcd_generic_preheat_menu();
+    } else {
+        eFilamentAction = FilamentAction::MmuCut;
+        preheat_or_continue();
     }
 }
 #endif //MMU_HAS_CUTTER

@@ -1,5 +1,5 @@
 #!/bin/bash 
-BUILD_ENV="1.0.7"
+BUILD_ENV="1.0.8"
 SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
 if [ ! -d "build-env" ]; then
@@ -36,6 +36,4 @@ $BUILD_ENV_PATH/arduino $SCRIPT_PATH/Firmware/Firmware.ino --verify --board Prus
 export ARDUINO=$BUILD_ENV_PATH
 
 cd $SCRIPT_PATH/lang
-./lang-build.sh || exit 10
-./lang-community.sh || exit 11
-./fw-build.sh || exit 12
+./fw-build.sh || exit 10
