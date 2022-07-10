@@ -501,9 +501,10 @@ void MMU2::SaveAndPark(bool move_axes, bool turn_off_nozzle) {
 
         if (card.sdprinting || usb_timer.running())
         {
-            LogEchoEvent("Paused and saved print to RAM");
-            lcd_pause_print();
-            // This sets isPrintPaused to true
+            LogEchoEvent("Pausing and saving print");
+            stop_and_save_print_to_ram(0.0, -default_retraction);
+            isPrintPaused = true;
+            SERIAL_PROTOCOLLNRPGM(MSG_OCTOPRINT_PAUSED);
         }
 
         if (move_axes){
