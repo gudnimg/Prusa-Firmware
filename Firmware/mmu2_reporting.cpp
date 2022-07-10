@@ -210,6 +210,14 @@ void ReportErrorHook(uint16_t ec) {
         // a button was pushed on the MMU and the LCD should
         // dismiss the error screen until MMU raises a new error
         ReportErrorHookState = ReportErrorHookStates::DISMISS_ERROR_SCREEN;
+    } else if (isPrintPaused && mmu2.MMUCurrentErrorCode() == ErrorCode::OK) {
+        // If a print is paused, but there is no error code, that means there is an error from the Printer.
+        // Such as Communication Timeout, Protocol Error, or FW Mismatch.
+        // If the logic state is active that means the MMU is responive
+        if (ec == (uint16_t)ErrorCode::MMU_NOT_RESPONDING && mmu2.MMU_LOGIC_STATE() == mmu2.xState::Active) {
+            // MMU is responsive again, so we can dismiss the Communication Timeout error
+            ReportErrorHookState = ReportErrorHookStates::DISMISS_ERROR_SCREEN;
+        }
     }
 
     const uint8_t ei = PrusaErrorCodeIndex(ec);
