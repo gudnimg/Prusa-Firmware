@@ -708,22 +708,22 @@ StepStatus MMU2::LogicStep() {
         break;
     case CommandError:
         ReportError(logic.Error());
-        SaveAndPark(false, false);
+        SaveAndPark(true, false);
         break;
     case CommunicationTimeout:
         state = xState::Connecting;
         ReportError(ErrorCode::MMU_NOT_RESPONDING);
-        SaveAndPark(false, false);
+        SaveAndPark(true, false);
         break;
     case ProtocolError:
         state = xState::Connecting;
         ReportError(ErrorCode::PROTOCOL_ERROR);
-        SaveAndPark(false, false);
+        SaveAndPark(true, false);
         break;
     case VersionMismatch:
         StopKeepPowered();
         ReportError(ErrorCode::VERSION_MISMATCH);
-        SaveAndPark(false, false);
+        SaveAndPark(true, false);
         break;
     case ButtonPushed:
         lastButton = logic.Button();
