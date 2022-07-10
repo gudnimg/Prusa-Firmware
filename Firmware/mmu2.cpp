@@ -196,7 +196,7 @@ void MMU2::mmu_loop() {
     if (is_mmu_error_monitor_active){
         // Call this every iteration to keep the knob rotation responsive
         // This includes when mmu_loop is called within manage_response
-        ReportErrorHook((uint16_t)lastErrorCode);
+        ReportErrorHook((uint16_t)lastErrorCode, mmu2.MMUCurrentErrorCode() == ErrorCode::OK ? ErrorSourcePrinter : ErrorSourceMMU);
     }
 
     avoidRecursion = false;
@@ -707,22 +707,22 @@ StepStatus MMU2::LogicStep() {
         OnMMUProgressMsg(logic.Progress());
         break;
     case CommandError:
-        ReportError(logic.Error());
+        ReportError(logic.Error(), ErrorSourceMMU);
         SaveAndPark(true, false);
         break;
     case CommunicationTimeout:
         state = xState::Connecting;
-        ReportError(ErrorCode::MMU_NOT_RESPONDING);
+        ReportError(ErrorCode::MMU_NOT_RESPONDING, ErrorSourcePrinter);
         SaveAndPark(true, false);
         break;
     case ProtocolError:
         state = xState::Connecting;
-        ReportError(ErrorCode::PROTOCOL_ERROR);
+        ReportError(ErrorCode::PROTOCOL_ERROR, ErrorSourcePrinter);
         SaveAndPark(true, false);
         break;
     case VersionMismatch:
         StopKeepPowered();
-        ReportError(ErrorCode::VERSION_MISMATCH);
+        ReportError(ErrorCode::VERSION_MISMATCH, ErrorSourcePrinter);
         SaveAndPark(true, false);
         break;
     case ButtonPushed:
@@ -761,7 +761,7 @@ void MMU2::SetActiveExtruder(uint8_t ex){
     active_extruder = ex; 
 }
 
-void MMU2::ReportError(ErrorCode ec) {
+void MMU2::ReportError(ErrorCode ec, uint8_t res) {
     // Due to a potential lossy error reporting layers linked to this hook
     // we'd better report everything to make sure especially the error states
     // do not get lost. 
@@ -788,7 +788,7 @@ void MMU2::ReportError(ErrorCode ec) {
         break;
     }
 
-    ReportErrorHook((uint16_t)ec);
+    ReportErrorHook((uint16_t)ec, res);
 
     if( ec != lastErrorCode ){ // deduplicate: only report changes in error codes into the log
         lastErrorCode = ec;
