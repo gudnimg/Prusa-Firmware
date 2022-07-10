@@ -14,6 +14,7 @@
 #include "strlen_cx.h"
 #include "temperature.h"
 #include "ultralcd.h"
+#include "cardreader.h"
 
 // Settings for filament load / unload from the LCD menu.
 // This is for Prusa MK3-style extruders. Customize for your hardware.
@@ -498,9 +499,17 @@ void MMU2::SaveAndPark(bool move_axes, bool turn_off_nozzle) {
       
         resume_hotend_temp = degTargetHotend(active_extruder);
 
+        if (card.sdprinting || usb_timer.running())
+        {
+            LogEchoEvent("Paused and saved print to RAM");
+            lcd_pause_print();
+            // This sets isPrintPaused to true
+        }
+
         if (move_axes){
             mmu_print_saved |= SavedState::ParkExtruder;
             // save current pos
+            // TODO is this needed if we saved print in RAM?
             for(uint8_t i = 0; i < 3; ++i){
                 resume_position.xyz[i] = current_position[i];
             }
@@ -558,6 +567,13 @@ void MMU2::ResumeHotendTemp() {
 
 void MMU2::ResumeUnpark()
 {
+    if (isPrintPaused)
+    {
+        LogEchoEvent("Resume and recover print to RAM");
+        lcd_resume_print();
+        // This resets the flag isPrintPaused
+    }
+
     if (mmu_print_saved & SavedState::ParkExtruder) {
         LogEchoEvent("Resuming XYZ");
 
@@ -682,23 +698,31 @@ StepStatus MMU2::LogicStep() {
     StepStatus ss = logic.Step();
     switch (ss) {
     case Finished:
+        if (isPrintPaused)
+        {
+            ResumeUnpark();
+        }
     case Processing:
         OnMMUProgressMsg(logic.Progress());
         break;
     case CommandError:
         ReportError(logic.Error());
+        SaveAndPark(false, false);
         break;
     case CommunicationTimeout:
         state = xState::Connecting;
         ReportError(ErrorCode::MMU_NOT_RESPONDING);
+        SaveAndPark(false, false);
         break;
     case ProtocolError:
         state = xState::Connecting;
         ReportError(ErrorCode::PROTOCOL_ERROR);
+        SaveAndPark(false, false);
         break;
     case VersionMismatch:
         StopKeepPowered();
         ReportError(ErrorCode::VERSION_MISMATCH);
+        SaveAndPark(false, false);
         break;
     case ButtonPushed:
         lastButton = logic.Button();
