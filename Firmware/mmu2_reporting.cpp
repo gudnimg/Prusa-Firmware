@@ -243,6 +243,7 @@ void ReportErrorHook(uint16_t ec, uint8_t res) {
                 // Reset the state in case a new error is reported
                 mmu2.is_mmu_error_monitor_active = false;
                 ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
+                KEEPALIVE_STATE(NOT_BUSY);
                 break;
             default:
                 break;
@@ -256,6 +257,7 @@ void ReportErrorHook(uint16_t ec, uint8_t res) {
         // Reset the state in case a new error is reported
         mmu2.is_mmu_error_monitor_active = false;
         ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
+        KEEPALIVE_STATE(NOT_BUSY);
         break;
     default:
         break;

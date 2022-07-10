@@ -791,6 +791,7 @@ void MMU2::ReportError(ErrorCode ec, uint8_t res) {
     ReportErrorHook((uint16_t)ec, res);
 
     if( ec != lastErrorCode ){ // deduplicate: only report changes in error codes into the log
+        KEEPALIVE_STATE(PAUSED_FOR_USER);
         lastErrorCode = ec;
         SERIAL_ECHO_START;
         SERIAL_ECHOLNRPGM( PrusaErrorTitle(PrusaErrorCodeIndex((uint16_t)ec)) );
