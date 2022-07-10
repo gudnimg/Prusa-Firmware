@@ -83,6 +83,9 @@ public:
     /// Power on the MMU
     void PowerOn();
 
+    /// Handles the transition between pausing and resuming a print and parking
+    /// and parking / unparking the extruder.
+    void ErrorPrintStateHandler();
 
     /// The main loop of MMU processing.
     /// Doesn't loop (block) inside, performs just one step of logic state machines.

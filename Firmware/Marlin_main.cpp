@@ -4752,7 +4752,6 @@ eeprom_update_word((uint16_t*)EEPROM_NOZZLE_DIAMETER_uM,0xFFFF);
 
         prepare_move();
         //ClearToSend();
-        st_synchronize();
       }
       break;
 

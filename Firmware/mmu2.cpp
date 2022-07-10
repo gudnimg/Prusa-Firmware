@@ -182,6 +182,44 @@ void MMU2::PowerOn(){
     power_on();
 }
 
+enum class MMUErrorPrintStates : uint8_t {
+    NONE           = 0,
+    PAUSE_PRINT    = 1,
+    SAVE_AND_PARK  = 2,
+    WAITING        = 3,
+    RESUME_PRINT   = 4,
+};
+
+enum MMUErrorPrintStates ReportErrorPrintState = MMUErrorPrintStates::NONE;
+
+void MMU2::ErrorPrintStateHandler() {
+    switch (ReportErrorPrintState)
+    {
+    case MMUErrorPrintStates::PAUSE_PRINT:
+        LogEchoEvent("Pausing and saving print");
+        start_pause_print = _millis();
+        stop_and_save_print_to_ram(0.0, -default_retraction);
+        isPrintPaused = true;
+        SERIAL_PROTOCOLLNRPGM(MSG_OCTOPRINT_PAUSED);
+        // Here we need to return
+        ReportErrorPrintState = MMUErrorPrintStates::SAVE_AND_PARK;
+        SERIAL_ECHOLNRPGM(PSTR("SAVE_AND_PARK"));
+        break;
+    case MMUErrorPrintStates::SAVE_AND_PARK:
+        SaveAndPark(true, false);
+        ReportErrorPrintState = MMUErrorPrintStates::WAITING;
+        SERIAL_ECHOLNRPGM(PSTR("WAITING"));
+        break;
+    case MMUErrorPrintStates::RESUME_PRINT:
+        ResumeUnpark();
+        ReportErrorPrintState = MMUErrorPrintStates::NONE;
+        SERIAL_ECHOLNRPGM(PSTR("NONE"));
+        break;
+    default:
+        break;
+    }
+}
+
 void MMU2::mmu_loop() {
     // We only leave this method if the current command was successfully completed - that's the Marlin's way of blocking operation
     // Atomic compare_exchange would have been the most appropriate solution here, but this gets called only in Marlin's task,
@@ -192,6 +230,8 @@ void MMU2::mmu_loop() {
     avoidRecursion = true;
 
     logicStepLastStatus = LogicStep(); // it looks like the mmu_loop doesn't need to be a blocking call
+
+    ErrorPrintStateHandler();
 
     if (is_mmu_error_monitor_active){
         // Call this every iteration to keep the knob rotation responsive
@@ -496,21 +536,11 @@ void MMU2::SaveAndPark(bool move_axes, bool turn_off_nozzle) {
     if (mmu_print_saved == SavedState::None) { // First occurrence. Save current position, park print head, disable nozzle heater.
         LogEchoEvent("Saving and parking");
         st_synchronize();
-      
         resume_hotend_temp = degTargetHotend(active_extruder);
-
-        if (card.sdprinting || usb_timer.running())
-        {
-            LogEchoEvent("Pausing and saving print");
-            stop_and_save_print_to_ram(0.0, -default_retraction);
-            isPrintPaused = true;
-            SERIAL_PROTOCOLLNRPGM(MSG_OCTOPRINT_PAUSED);
-        }
 
         if (move_axes){
             mmu_print_saved |= SavedState::ParkExtruder;
             // save current pos
-            // TODO is this needed if we saved print in RAM?
             for(uint8_t i = 0; i < 3; ++i){
                 resume_position.xyz[i] = current_position[i];
             }
@@ -701,29 +731,26 @@ StepStatus MMU2::LogicStep() {
     case Finished:
         if (isPrintPaused)
         {
-            ResumeUnpark();
+            // Error resolved, resume print automatically
+            ReportErrorPrintState = MMUErrorPrintStates::RESUME_PRINT;
         }
     case Processing:
         OnMMUProgressMsg(logic.Progress());
         break;
     case CommandError:
         ReportError(logic.Error(), ErrorSourceMMU);
-        SaveAndPark(true, false);
         break;
     case CommunicationTimeout:
         state = xState::Connecting;
         ReportError(ErrorCode::MMU_NOT_RESPONDING, ErrorSourcePrinter);
-        SaveAndPark(true, false);
         break;
     case ProtocolError:
         state = xState::Connecting;
         ReportError(ErrorCode::PROTOCOL_ERROR, ErrorSourcePrinter);
-        SaveAndPark(true, false);
         break;
     case VersionMismatch:
         StopKeepPowered();
         ReportError(ErrorCode::VERSION_MISMATCH, ErrorSourcePrinter);
-        SaveAndPark(true, false);
         break;
     case ButtonPushed:
         lastButton = logic.Button();
@@ -795,6 +822,13 @@ void MMU2::ReportError(ErrorCode ec, uint8_t res) {
         lastErrorCode = ec;
         SERIAL_ECHO_START;
         SERIAL_ECHOLNRPGM( PrusaErrorTitle(PrusaErrorCodeIndex((uint16_t)ec)) );
+        if (card.sdprinting || usb_timer.running()) {
+            ReportErrorPrintState = MMUErrorPrintStates::PAUSE_PRINT;
+            SERIAL_ECHOLNRPGM(PSTR("PAUSE_PRINT"));
+        } else {
+            ReportErrorPrintState = MMUErrorPrintStates::SAVE_AND_PARK;
+            SERIAL_ECHOLNRPGM(PSTR("SAVE_AND_PARK"));
+        }
     }
 
     static_assert(mmu2Magic[0] == 'M' 
