@@ -185,9 +185,10 @@ void MMU2::PowerOn(){
 enum class MMUErrorPrintStates : uint8_t {
     NONE           = 0,
     PAUSE_PRINT    = 1,
-    SAVE_AND_PARK  = 2,
+    PARK           = 2,
     WAITING        = 3,
-    RESUME_PRINT   = 4,
+    UNPARK         = 4,
+    RESUME_PRINT   = 5,
 };
 
 enum MMUErrorPrintStates ReportErrorPrintState = MMUErrorPrintStates::NONE;
@@ -196,22 +197,30 @@ void MMU2::ErrorPrintStateHandler() {
     switch (ReportErrorPrintState)
     {
     case MMUErrorPrintStates::PAUSE_PRINT:
-        LogEchoEvent("Pausing and saving print");
         start_pause_print = _millis();
         stop_and_save_print_to_ram(0.0, -default_retraction);
         isPrintPaused = true;
         SERIAL_PROTOCOLLNRPGM(MSG_OCTOPRINT_PAUSED);
-        // Here we need to return
-        ReportErrorPrintState = MMUErrorPrintStates::SAVE_AND_PARK;
-        SERIAL_ECHOLNRPGM(PSTR("SAVE_AND_PARK"));
+        ReportErrorPrintState = MMUErrorPrintStates::PARK;
+        SERIAL_ECHOLNRPGM(PSTR("PARK"));
         break;
-    case MMUErrorPrintStates::SAVE_AND_PARK:
+    case MMUErrorPrintStates::PARK:
         SaveAndPark(true, false);
         ReportErrorPrintState = MMUErrorPrintStates::WAITING;
         SERIAL_ECHOLNRPGM(PSTR("WAITING"));
         break;
-    case MMUErrorPrintStates::RESUME_PRINT:
+    case MMUErrorPrintStates::UNPARK:
         ResumeUnpark();
+        if (isPrintPaused) {
+            ReportErrorPrintState = MMUErrorPrintStates::RESUME_PRINT;
+            SERIAL_ECHOLNRPGM(PSTR("RESUME PRINT"));
+        } else {
+            ReportErrorPrintState = MMUErrorPrintStates::NONE;
+            SERIAL_ECHOLNRPGM(PSTR("NONE"));
+        }
+        break;
+    case MMUErrorPrintStates::RESUME_PRINT:
+        lcd_resume_print();
         ReportErrorPrintState = MMUErrorPrintStates::NONE;
         SERIAL_ECHOLNRPGM(PSTR("NONE"));
         break;
@@ -598,13 +607,6 @@ void MMU2::ResumeHotendTemp() {
 
 void MMU2::ResumeUnpark()
 {
-    if (isPrintPaused)
-    {
-        LogEchoEvent("Resume and recover print to RAM");
-        lcd_resume_print();
-        // This resets the flag isPrintPaused
-    }
-
     if (mmu_print_saved & SavedState::ParkExtruder) {
         LogEchoEvent("Resuming XYZ");
 
@@ -729,10 +731,11 @@ StepStatus MMU2::LogicStep() {
     StepStatus ss = logic.Step();
     switch (ss) {
     case Finished:
-        if (isPrintPaused)
+        if (ReportErrorPrintState == MMUErrorPrintStates::WAITING && is_mmu_error_monitor_active == false)
         {
             // Error resolved, resume print automatically
-            ReportErrorPrintState = MMUErrorPrintStates::RESUME_PRINT;
+            ReportErrorPrintState = MMUErrorPrintStates::UNPARK;
+            SERIAL_ECHOLNRPGM(PSTR("UNPARK"));
         }
     case Processing:
         OnMMUProgressMsg(logic.Progress());
@@ -826,8 +829,8 @@ void MMU2::ReportError(ErrorCode ec, uint8_t res) {
             ReportErrorPrintState = MMUErrorPrintStates::PAUSE_PRINT;
             SERIAL_ECHOLNRPGM(PSTR("PAUSE_PRINT"));
         } else {
-            ReportErrorPrintState = MMUErrorPrintStates::SAVE_AND_PARK;
-            SERIAL_ECHOLNRPGM(PSTR("SAVE_AND_PARK"));
+            ReportErrorPrintState = MMUErrorPrintStates::PARK;
+            SERIAL_ECHOLNRPGM(PSTR("PARK"));
         }
     }
 
