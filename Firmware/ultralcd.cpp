@@ -6314,7 +6314,7 @@ void lcd_print_stop()
         if (isPrintPaused)
         {
             // Restore temperature saved in ram after pausing print
-            restore_extruder_temperture_from_ram();
+            restore_extruder_temperature_from_ram();
         }
         MMU2::mmu2.unload(); //M702 C
     }

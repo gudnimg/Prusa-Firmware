@@ -11307,7 +11307,7 @@ void stop_and_save_print_to_ram(float z_move, float e_move)
   }
 }
 
-void restore_extruder_temperture_from_ram() {
+void restore_extruder_temperature_from_ram() {
     if (degTargetHotend(saved_active_extruder) != saved_extruder_temperature)
     {
         setTargetHotendSafe(saved_extruder_temperature, saved_active_extruder);
@@ -11340,7 +11340,7 @@ void restore_print_from_ram_and_continue(float e_move)
 //	    current_position[axis] = st_get_position_mm(axis);
 	active_extruder = saved_active_extruder; //restore active_extruder
 	fanSpeed = saved_fanSpeed;
-	restore_extruder_temperture_from_ram();
+	restore_extruder_temperature_from_ram();
 	axis_relative_modes ^= (-saved_extruder_relative_mode ^ axis_relative_modes) & E_AXIS_MASK;
 	float e = saved_pos[E_AXIS] - e_move;
 	plan_set_e_position(e);
