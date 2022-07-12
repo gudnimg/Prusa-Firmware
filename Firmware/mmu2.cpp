@@ -197,7 +197,6 @@ void MMU2::ErrorPrintStateHandler() {
     switch (ReportErrorPrintState)
     {
     case MMUErrorPrintStates::PAUSE_PRINT:
-        start_pause_print = _millis();
         stop_and_save_print_to_ram(0.0, -default_retraction);
         isPrintPaused = true;
         SERIAL_PROTOCOLLNRPGM(MSG_OCTOPRINT_PAUSED);
@@ -205,6 +204,10 @@ void MMU2::ErrorPrintStateHandler() {
         SERIAL_ECHOLNRPGM(PSTR("PARK"));
         break;
     case MMUErrorPrintStates::PARK:
+        // TODO: (12th July 2022)
+        // If user is printing he can resume the print and bypass the error code
+        // via gcode or USB. We need to disable gcode processing in the future
+        // to prevent this.
         SaveAndPark(true, false);
         ReportErrorPrintState = MMUErrorPrintStates::WAITING;
         SERIAL_ECHOLNRPGM(PSTR("WAITING"));
@@ -220,7 +223,8 @@ void MMU2::ErrorPrintStateHandler() {
         }
         break;
     case MMUErrorPrintStates::RESUME_PRINT:
-        lcd_resume_print();
+        restore_print_from_ram_and_continue(default_retraction);
+        isPrintPaused = false;
         ReportErrorPrintState = MMUErrorPrintStates::NONE;
         SERIAL_ECHOLNRPGM(PSTR("NONE"));
         break;
