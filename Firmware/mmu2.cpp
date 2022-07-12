@@ -14,6 +14,7 @@
 #include "strlen_cx.h"
 #include "temperature.h"
 #include "ultralcd.h"
+#include "cardreader.h"
 
 // Settings for filament load / unload from the LCD menu.
 // This is for Prusa MK3-style extruders. Customize for your hardware.
@@ -183,9 +184,11 @@ void MMU2::PowerOn(){
 
 enum class MMUErrorPrintStates : uint8_t {
     NONE           = 0,
-    PARK           = 1,
-    WAITING        = 2,
-    UNPARK         = 3,
+    PAUSE_PRINT    = 1,
+    PARK           = 2,
+    WAITING        = 3,
+    UNPARK         = 4,
+    RESUME_PRINT   = 5,
 };
 
 enum MMUErrorPrintStates ReportErrorPrintState = MMUErrorPrintStates::NONE;
@@ -193,6 +196,14 @@ enum MMUErrorPrintStates ReportErrorPrintState = MMUErrorPrintStates::NONE;
 void MMU2::ErrorPrintStateHandler() {
     switch (ReportErrorPrintState)
     {
+    case MMUErrorPrintStates::PAUSE_PRINT:
+        start_pause_print = _millis();
+        stop_and_save_print_to_ram(0.0, -default_retraction);
+        isPrintPaused = true;
+        SERIAL_PROTOCOLLNRPGM(MSG_OCTOPRINT_PAUSED);
+        ReportErrorPrintState = MMUErrorPrintStates::PARK;
+        SERIAL_ECHOLNRPGM(PSTR("PARK"));
+        break;
     case MMUErrorPrintStates::PARK:
         SaveAndPark(true, false);
         ReportErrorPrintState = MMUErrorPrintStates::WAITING;
@@ -200,6 +211,16 @@ void MMU2::ErrorPrintStateHandler() {
         break;
     case MMUErrorPrintStates::UNPARK:
         ResumeUnpark();
+        if (isPrintPaused) {
+            ReportErrorPrintState = MMUErrorPrintStates::RESUME_PRINT;
+            SERIAL_ECHOLNRPGM(PSTR("RESUME PRINT"));
+        } else {
+            ReportErrorPrintState = MMUErrorPrintStates::NONE;
+            SERIAL_ECHOLNRPGM(PSTR("NONE"));
+        }
+        break;
+    case MMUErrorPrintStates::RESUME_PRINT:
+        lcd_resume_print();
         ReportErrorPrintState = MMUErrorPrintStates::NONE;
         SERIAL_ECHOLNRPGM(PSTR("NONE"));
         break;
@@ -804,8 +825,13 @@ void MMU2::ReportError(ErrorCode ec, uint8_t res) {
         lastErrorCode = ec;
         SERIAL_ECHO_START;
         SERIAL_ECHOLNRPGM( PrusaErrorTitle(PrusaErrorCodeIndex((uint16_t)ec)) );
-        ReportErrorPrintState = MMUErrorPrintStates::PARK;
-        SERIAL_ECHOLNRPGM(PSTR("PARK"));
+        if (card.sdprinting || usb_timer.running()) {
+            ReportErrorPrintState = MMUErrorPrintStates::PAUSE_PRINT;
+            SERIAL_ECHOLNRPGM(PSTR("PAUSE_PRINT"));
+        } else {
+            ReportErrorPrintState = MMUErrorPrintStates::PARK;
+            SERIAL_ECHOLNRPGM(PSTR("PARK"));
+        }
     }
 
     static_assert(mmu2Magic[0] == 'M' 
