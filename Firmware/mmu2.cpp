@@ -211,6 +211,7 @@ void MMU2::ErrorPrintStateHandler() {
         SaveAndPark(true, false);
         ReportErrorPrintState = MMUErrorPrintStates::WAITING;
         SERIAL_ECHOLNRPGM(PSTR("WAITING"));
+        KEEPALIVE_STATE(PAUSED_FOR_USER);
         break;
     case MMUErrorPrintStates::UNPARK:
         ResumeUnpark();
@@ -824,11 +825,8 @@ void MMU2::ReportError(ErrorCode ec, uint8_t res) {
 
     ReportErrorHook((uint16_t)ec, res);
 
-    if( ec != lastErrorCode ){ // deduplicate: only report changes in error codes into the log
-        KEEPALIVE_STATE(PAUSED_FOR_USER);
-        lastErrorCode = ec;
-        SERIAL_ECHO_START;
-        SERIAL_ECHOLNRPGM( PrusaErrorTitle(PrusaErrorCodeIndex((uint16_t)ec)) );
+    if (ReportErrorPrintState == MMUErrorPrintStates::NONE)
+    {
         if (card.sdprinting || usb_timer.running()) {
             ReportErrorPrintState = MMUErrorPrintStates::PAUSE_PRINT;
             SERIAL_ECHOLNRPGM(PSTR("PAUSE_PRINT"));
@@ -836,6 +834,12 @@ void MMU2::ReportError(ErrorCode ec, uint8_t res) {
             ReportErrorPrintState = MMUErrorPrintStates::PARK;
             SERIAL_ECHOLNRPGM(PSTR("PARK"));
         }
+    }
+
+    if( ec != lastErrorCode ){ // deduplicate: only report changes in error codes into the log
+        lastErrorCode = ec;
+        SERIAL_ECHO_START;
+        SERIAL_ECHOLNRPGM( PrusaErrorTitle(PrusaErrorCodeIndex((uint16_t)ec)) );
     }
 
     static_assert(mmu2Magic[0] == 'M' 
