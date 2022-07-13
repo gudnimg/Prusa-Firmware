@@ -226,6 +226,7 @@ void MMU2::ErrorPrintStateHandler() {
     case MMUErrorPrintStates::RESUME_PRINT:
         restore_print_from_ram_and_continue(default_retraction);
         isPrintPaused = false;
+        SERIAL_PROTOCOLLNRPGM(MSG_OCTOPRINT_RESUMED);
         ReportErrorPrintState = MMUErrorPrintStates::NONE;
         SERIAL_ECHOLNRPGM(PSTR("NONE"));
         break;
