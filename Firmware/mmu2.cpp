@@ -203,7 +203,7 @@ void MMU2::ErrorPrintStateHandler() {
         isPrintPaused = true;
         SERIAL_PROTOCOLLNRPGM(MSG_OCTOPRINT_PAUSED);
         ReportErrorPrintState = MMUErrorPrintStates::PARK;
-        SERIAL_ECHOLNRPGM(PSTR("PARK"));
+        SERIAL_ECHOLNPGM("PARK");
         break;
     case MMUErrorPrintStates::PARK:
         // TODO: (12th July 2022)
@@ -212,17 +212,17 @@ void MMU2::ErrorPrintStateHandler() {
         // to prevent this.
         SaveAndPark(true, false);
         ReportErrorPrintState = MMUErrorPrintStates::WAITING;
-        SERIAL_ECHOLNRPGM(PSTR("WAITING"));
+        SERIAL_ECHOLNPGM("WAITING");
         KEEPALIVE_STATE(PAUSED_FOR_USER);
         break;
     case MMUErrorPrintStates::UNPARK:
         ResumeUnpark();
         if (isPrintPaused) {
             ReportErrorPrintState = MMUErrorPrintStates::RESUME_PRINT;
-            SERIAL_ECHOLNRPGM(PSTR("RESUME PRINT"));
+            SERIAL_ECHOLNPGM("RESUME PRINT");
         } else {
             ReportErrorPrintState = MMUErrorPrintStates::NONE;
-            SERIAL_ECHOLNRPGM(PSTR("NONE"));
+            SERIAL_ECHOLNPGM("NONE");
         }
         break;
     case MMUErrorPrintStates::RESUME_PRINT:
@@ -230,7 +230,7 @@ void MMU2::ErrorPrintStateHandler() {
         isPrintPaused = false;
         SERIAL_PROTOCOLLNRPGM(MSG_OCTOPRINT_RESUMED);
         ReportErrorPrintState = MMUErrorPrintStates::NONE;
-        SERIAL_ECHOLNRPGM(PSTR("NONE"));
+        SERIAL_ECHOLNPGM("NONE");
         break;
     default:
         break;
@@ -783,7 +783,7 @@ StepStatus MMU2::LogicStep() {
         {
             // Error resolved, resume print automatically
             ReportErrorPrintState = MMUErrorPrintStates::UNPARK;
-            SERIAL_ECHOLNRPGM(PSTR("UNPARK"));
+            SERIAL_ECHOLNPGM("UNPARK");
         }
     case Processing:
         OnMMUProgressMsg(logic.Progress());
@@ -872,10 +872,10 @@ void MMU2::ReportError(ErrorCode ec, uint8_t res) {
     {
         if (card.sdprinting || usb_timer.running()) {
             ReportErrorPrintState = MMUErrorPrintStates::PAUSE_PRINT;
-            SERIAL_ECHOLNRPGM(PSTR("PAUSE_PRINT"));
+            SERIAL_ECHOLNPGM("PAUSE_PRINT");
         } else {
             ReportErrorPrintState = MMUErrorPrintStates::PARK;
-            SERIAL_ECHOLNRPGM(PSTR("PARK"));
+            SERIAL_ECHOLNPGM("PARK");
         }
     }
 
