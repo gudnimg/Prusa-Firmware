@@ -211,6 +211,7 @@ void ReportErrorHook(uint16_t ec, uint8_t res) {
         if (ec == (uint16_t)ErrorCode::MMU_NOT_RESPONDING && mmu2.MMU_LOGIC_STATE() == mmu2.xState::Active) {
             // MMU is responsive again, so we can dismiss the Communication Timeout error
             ReportErrorHookState = ReportErrorHookStates::DISMISS_ERROR_SCREEN;
+        }
     } else {
         // attempt an automatic Retry button
         if( ReportErrorHookState == ReportErrorHookStates::MONITOR_SELECTION ){
