@@ -198,9 +198,11 @@ enum class ReportErrorHookStates : uint8_t {
 
 enum ReportErrorHookStates ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
 
+/// @brief Render MMU error screen on the LCD. This must be non-blocking
+/// and allow the MMU and printer to communicate with each other.
+/// @param[in] ec Error code
 void ReportErrorHook(uint16_t ec, uint8_t res) {
-    if (mmu2.MMUCurrentErrorCode() == ErrorCode::OK && res == MMU2::ErrorSourceMMU)
-    {
+    if (mmu2.MMUCurrentErrorCode() == ErrorCode::OK && res == MMU2::ErrorSourceMMU) {
         // If the error code suddenly changes to OK, that means
         // a button was pushed on the MMU and the LCD should
         // dismiss the error screen until MMU raises a new error
@@ -209,6 +211,12 @@ void ReportErrorHook(uint16_t ec, uint8_t res) {
         if (ec == (uint16_t)ErrorCode::MMU_NOT_RESPONDING && mmu2.MMU_LOGIC_STATE() == mmu2.xState::Active) {
             // MMU is responsive again, so we can dismiss the Communication Timeout error
             ReportErrorHookState = ReportErrorHookStates::DISMISS_ERROR_SCREEN;
+    } else {
+        // attempt an automatic Retry button
+        if( ReportErrorHookState == ReportErrorHookStates::MONITOR_SELECTION ){
+            if( mmu2.RetryIfPossible(ec) ){
+                ReportErrorHookState = ReportErrorHookStates::DISMISS_ERROR_SCREEN;
+            }
         }
     }
 

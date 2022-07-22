@@ -113,7 +113,9 @@ MMU2::MMU2()
     , loadFilamentStarted(false)
     , unloadFilamentStarted(false)
     , loadingToNozzle(false)
+    , inAutoRetry(false)
 {
+    ResetRetryAttempts();
 }
 
 void MMU2::Start() {
@@ -276,6 +278,36 @@ bool MMU2::WaitForMMUReady(){
         // fire-up a fsm_dlg and show "MMU not responding"?
     default:
         return true;
+    }
+}
+
+bool MMU2::RetryIfPossible(uint16_t ec){
+    if( retryAttempts ){
+        SERIAL_ECHOPGM("retryAttempts=");SERIAL_ECHOLN((uint16_t)retryAttempts);
+        SetButtonResponse(ButtonOperations::Retry);
+        // check, that Retry is actually allowed on that operation
+        if( ButtonAvailable(ec) != NoButton ){
+            inAutoRetry = true;
+            SERIAL_ECHOLNPGM("RetryButtonPressed");
+            // We don't decrement until the button is acknowledged by the MMU.
+            //--retryAttempts; // "used" one retry attempt
+            return true;
+        }
+    }
+    inAutoRetry = false;
+    return false;
+}
+
+void MMU2::ResetRetryAttempts(){
+    SERIAL_ECHOLNPGM("ResetRetryAttempts");
+    retryAttempts = MAX_RETRIES;
+}
+
+void MMU2::DecrementRetryAttempts(){
+    if (inAutoRetry && retryAttempts)
+    {
+        SERIAL_ECHOLNPGM("DecrementRetryAttempts");
+        retryAttempts--;
     }
 }
 
@@ -540,6 +572,7 @@ bool MMU2::eject_filament(uint8_t index, bool recover) {
 }
 
 void MMU2::Button(uint8_t index){
+    SERIAL_ECHOLNPGM("Button");
     logic.Button(index);
 }
 
@@ -641,6 +674,8 @@ void MMU2::CheckUserInput(){
     case Left:
     case Middle:
     case Right:
+        SERIAL_ECHOPGM("CheckUserInput-btnLMR ");
+        SERIAL_ECHOLN(btn);
         ResumeHotendTemp(); // Recover the hotend temp before we attempt to do anything else...
         Button(btn);
         break;
@@ -688,7 +723,7 @@ void MMU2::manage_response(const bool move_axes, const bool turn_off_nozzle) {
             if (!nozzleTimeout.running())
             {
                 nozzleTimeout.start();
-                LogEchoEvent(" Cooling Timeout started");
+                LogEchoEvent("Cooling Timeout started");
             } 
             else if (nozzleTimeout.expired(DEFAULT_SAFETYTIMER_TIME_MINS*60*1000ul)) // mins->msec. TODO: do we use the global or have our own independent timeout
             {
@@ -709,13 +744,20 @@ void MMU2::manage_response(const bool move_axes, const bool turn_off_nozzle) {
             // command/operation completed, let Marlin continue its work
             // the E may have some more moves to finish - wait for them
             ResumeUnpark(); // We can now travel back to the tower or wherever we were when we saved.
+            ResetRetryAttempts(); // Reset the retry counter.
             st_synchronize(); 
             return;
         case VersionMismatch: // this basically means the MMU will be disabled until reconnected
             CheckUserInput();
             return;
-        case CommunicationTimeout:
         case CommandError:
+            // Don't proceed to the park/save if we are doing an autoretry.
+            if (inAutoRetry)
+            {
+                continue;
+            }
+            /* FALLTHRU */
+        case CommunicationTimeout:
         case ProtocolError:
             SaveAndPark(move_axes, turn_off_nozzle); // and wait for the user to resolve the problem
             CheckUserInput();

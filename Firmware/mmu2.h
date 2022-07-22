@@ -6,6 +6,8 @@ struct E_Step;
 
 namespace MMU2 {
 
+static constexpr uint8_t MAX_RETRIES = 3U;
+
 /// @@TODO hmmm, 12 bytes... may be we can reduce that
 struct xyz_pos_t {
     float xyz[3];
@@ -172,7 +174,16 @@ public:
     /// This is useful to determine if the MMU is responsive
     xState MMU_LOGIC_STATE() const { return state; }
 
+    /// Automagically "press" a Retry button if we have any retry attempts left
+    bool RetryIfPossible(uint16_t ec);
+
+    /// Decrement the retry attempts, if in a retry. 
+    // Called by the MMU protocol when a sent button is acknowledged.
+    void DecrementRetryAttempts();
+
 private:
+    /// Reset the retryAttempts back to the default value
+    void ResetRetryAttempts();
     /// Perform software self-reset of the MMU (sends an X0 command)
     void ResetX0();
     
@@ -229,13 +240,13 @@ private:
 
     /// Check for any button/user input coming from the printer's UI
     void CheckUserInput();
-    
+
     /// Entry check of all external commands.
     /// It can wait until the MMU becomes ready.
     /// Optionally, it can also emit/display an error screen and the user can decide what to do next.
     /// @returns false if the MMU is not ready to perform the command (for whatever reason)
     bool WaitForMMUReady();
-    
+
     ProtocolLogic logic; ///< implementation of the protocol logic layer
     int extruder; ///< currently active slot in the MMU ... somewhat... not sure where to get it from yet
     uint8_t previous_extruder; ///< last active slot in the MMU, useful for M600
@@ -261,7 +272,9 @@ private:
     /// unlike the mid-print ToolChange commands, which only load the first ~30mm and then the G-code takes over.
     bool loadingToNozzle;
     
-    
+    uint8_t retryAttempts;
+
+    bool inAutoRetry;
 };
 
 /// following Marlin's way of doing stuff - one and only instance of MMU implementation in the code base
