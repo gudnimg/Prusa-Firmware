@@ -1030,6 +1030,31 @@ int16_t SdBaseFile::read() {
   uint8_t b;
   return read(&b, 1) == 1 ? b : -1;
 }
+
+bool SdBaseFile::GetBlockAndOffset(uint32_t * block, uint16_t * offset) {
+    *offset = curPosition_ & 0X1FF;  // offset in block
+    if (type_ == FAT_FILE_TYPE_ROOT_FIXED) {
+        // SHR by 9 means skip the last byte and shift just 3 bytes by 1
+        // -> should be 8 instructions... and not the horrible loop shifting 4 bytes at once
+        // still need to get some work on this
+        *block = vol_->rootDirStart() + (curPosition_ >> 9); 
+    } else {
+        uint8_t blockOfCluster = vol_->blockOfCluster(curPosition_);
+        if (*offset == 0 && blockOfCluster == 0) {
+            // start of new cluster
+            if (curPosition_ == 0) {
+                // use first cluster in file
+                curCluster_ = firstCluster_;
+            } else {
+                // get next cluster from FAT
+                if (!vol_->fatGet(curCluster_, &curCluster_)) return false;
+            }
+        }
+        *block = vol_->clusterStartBlock(curCluster_) + blockOfCluster;
+    }
+    return true;
+}
+
 //------------------------------------------------------------------------------
 /** Read data from a file starting at the current position.
  *
@@ -1060,23 +1085,7 @@ int16_t SdBaseFile::read(void* buf, uint16_t nbyte) {
   // amount left to read
   toRead = nbyte;
   while (toRead > 0) {
-    offset = curPosition_ & 0X1FF;  // offset in block
-    if (type_ == FAT_FILE_TYPE_ROOT_FIXED) {
-      block = vol_->rootDirStart() + (curPosition_ >> 9);
-    } else {
-      uint8_t blockOfCluster = vol_->blockOfCluster(curPosition_);
-      if (offset == 0 && blockOfCluster == 0) {
-        // start of new cluster
-        if (curPosition_ == 0) {
-          // use first cluster in file
-          curCluster_ = firstCluster_;
-        } else {
-          // get next cluster from FAT
-          if (!vol_->fatGet(curCluster_, &curCluster_)) goto fail;
-        }
-      }
-      block = vol_->clusterStartBlock(curCluster_) + blockOfCluster;
-    }
+    if (!GetBlockAndOffset(&block, &offset)) goto fail;
     uint16_t n = toRead;
 
     // amount to be read from current block

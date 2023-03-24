@@ -281,7 +281,8 @@ class SdBaseFile {
   static void printFatDate(uint16_t fatDate);
   static void printFatTime( uint16_t fatTime);
   bool printName();
-protected:  
+protected:
+  bool GetBlockAndOffset(uint32_t * block, uint16_t* index);
   int16_t read();
   int16_t read(void* buf, uint16_t nbyte);
 public:

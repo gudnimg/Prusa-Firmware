@@ -180,7 +180,7 @@ eof_or_fail:
 bool SdFile::gfEnsureBlock(){
     // this comparison is heavy-weight, especially when there is another one inside cacheRawBlock
     // but it is necessary to avoid computing of terminateOfs if not needed
-    if( gfBlock != vol_->cacheBlockNumber_ ){
+    if( gfBlock != vol_->cacheBlockNumber() ){
         if ( ! vol_->cacheRawBlock(gfBlock, SdVolume::CACHE_FOR_READ)){
             return false;
         }
@@ -195,27 +195,7 @@ bool SdFile::gfComputeNextFileBlock() {
     // error if not open or write only
     if (!isOpen() || !(flags_ & O_READ)) return false;
 
-    gfOffset = curPosition_ & 0X1FF;  // offset in block
-    if (type_ == FAT_FILE_TYPE_ROOT_FIXED) {
-        // SHR by 9 means skip the last byte and shift just 3 bytes by 1
-        // -> should be 8 instructions... and not the horrible loop shifting 4 bytes at once
-        // still need to get some work on this
-        gfBlock = vol_->rootDirStart() + (curPosition_ >> 9); 
-    } else {
-        uint8_t blockOfCluster = vol_->blockOfCluster(curPosition_);
-        if (gfOffset == 0 && blockOfCluster == 0) {
-            // start of new cluster
-            if (curPosition_ == 0) {
-                // use first cluster in file
-                curCluster_ = firstCluster_;
-            } else {
-                // get next cluster from FAT
-                if (!vol_->fatGet(curCluster_, &curCluster_)) return false;
-            }
-        }
-        gfBlock = vol_->clusterStartBlock(curCluster_) + blockOfCluster;
-    }
-    return true;
+    return GetBlockAndOffset(&gfBlock, &gfOffset);
 }
 
 //------------------------------------------------------------------------------
