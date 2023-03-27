@@ -165,19 +165,6 @@ FORCE_INLINE bool isCoolingBed() {
 int getHeaterPower(int heater);
 void disable_heater(); // Disable all heaters *instantaneously*
 void updatePID();
-
-
-FORCE_INLINE void autotempShutdown(){
- #ifdef AUTOTEMP
- if(autotemp_enabled)
- {
-  autotemp_enabled=false;
-  if(degTargetHotend(active_extruder)>autotemp_min)
-    setTargetHotend(0);
- }
- #endif
-}
-
 void PID_autotune(float temp, int extruder, int ncycles);
 
 #ifdef TEMP_MODEL

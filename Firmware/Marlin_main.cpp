@@ -3933,7 +3933,6 @@ extern uint8_t st_backlash_y;
 //!@n M107 - Fan off
 //!@n M109 - Sxxx Wait for extruder current temp to reach target temp. Waits only when heating
 //!          Rxxx Wait for extruder current temp to reach target temp. Waits when heating and cooling
-//!        IF AUTOTEMP is enabled, S<mintemp> B<maxtemp> F<factor>. Exit autotemp by any M109 without F
 //!@n M112 - Emergency stop
 //!@n M113 - Get or set the timeout interval for Host Keepalive "busy" messages
 //!@n M114 - Output current position to serial port
@@ -5524,7 +5523,6 @@ void process_commands()
       SERIAL_ECHO_START;
       SERIAL_ECHOLN(time);
       lcd_setstatus(time);
-      autotempShutdown();
       }
       break;
 
@@ -6087,7 +6085,7 @@ Sigma_Exit:
      
 	  - `S` - Set extruder temperature
       - `R` - Set extruder temperature
-	  - `B` - Set max. extruder temperature, while `S` is min. temperature. Not active in default, only if AUTOTEMP is defined in source code.
+	  - `B` - Set max. extruder temperature, while `S` is min. temperature. Not active in default
     
     Parameters S and R are treated identically.
     Command always waits for both cool down and heat up.
@@ -6099,23 +6097,11 @@ Sigma_Exit:
 	  heating_status = HeatingStatus::EXTRUDER_HEATING;
       prusa_statistics(1);
 
-#ifdef AUTOTEMP
-        autotemp_enabled=false;
-      #endif
       if (code_seen('S')) {
           setTargetHotend(code_value());
             } else if (code_seen('R')) {
                 setTargetHotend(code_value());
       }
-      #ifdef AUTOTEMP
-        if (code_seen('S')) autotemp_min=code_value();
-        if (code_seen('B')) autotemp_max=code_value();
-        if (code_seen('F'))
-        {
-          autotemp_factor=code_value();
-          autotemp_enabled=true;
-        }
-      #endif
 
       codenum = _millis();
 

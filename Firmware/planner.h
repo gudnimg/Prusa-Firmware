@@ -193,15 +193,6 @@ extern unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
 extern long position[NUM_AXIS];
 
-
-#ifdef AUTOTEMP
-    extern bool autotemp_enabled;
-    extern float autotemp_max;
-    extern float autotemp_min;
-    extern float autotemp_factor;
-#endif
-
-
 // Check for BLOCK_BUFFER_SIZE requirements
 static_assert(!(BLOCK_BUFFER_SIZE & (BLOCK_BUFFER_SIZE - 1)),
               "BLOCK_BUFFER_SIZE must be a power of two");
