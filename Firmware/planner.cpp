@@ -1240,23 +1240,21 @@ Having the real displacement of the head, we can calculate the total movement le
       // still need to replicate the *exact* same step grouping policy (see below)
       if (advance_speed > MAX_STEP_FREQUENCY) advance_speed = MAX_STEP_FREQUENCY;
       float advance_rate = (F_CPU / 8.0) / advance_speed;
+      uint8_t advance_step_loops;
       if (advance_speed > 20000) {
-          block->advance_rate = advance_rate * 4;
-          block->advance_step_loops = 4;
-      }
-      else if (advance_speed > 10000) {
-          block->advance_rate = advance_rate * 2;
-          block->advance_step_loops = 2;
-      }
-      else
-      {
+          advance_rate *= 4;
+          advance_step_loops = 4;
+      } else if (advance_speed > 10000) {
+          advance_rate *= 2;
+          advance_step_loops = 2;
+      } else {
           // never overflow the internal accumulator with very low rates
-          if (advance_rate < UINT16_MAX)
-              block->advance_rate = advance_rate;
-          else
-              block->advance_rate = UINT16_MAX;
-          block->advance_step_loops = 1;
+          advance_rate = min(advance_rate, UINT16_MAX);
+          advance_step_loops = 1;
       }
+
+      block->advance_rate = (uint16_t)advance_rate;
+      block->advance_step_loops = advance_step_loops;
 
       #ifdef LA_DEBUG
       if (block->advance_step_loops > 2)
