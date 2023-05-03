@@ -81,26 +81,6 @@ inline void world2machine(const float &x, const float &y, float &out_x, float &o
     world2machine(out_x, out_y);
 }
 
-inline void machine2world(float x, float y, float &out_x, float &out_y)
-{
-	if (world2machine_correction_mode == WORLD2MACHINE_CORRECTION_NONE) {
-		// No correction.
-		out_x = x;
-		out_y = y;
-	} else {
-		if (world2machine_correction_mode & WORLD2MACHINE_CORRECTION_SHIFT) {
-			// Then add the offset.
-			x -= world2machine_shift[0];
-			y -= world2machine_shift[1];
-		}
-		if (world2machine_correction_mode & WORLD2MACHINE_CORRECTION_SKEW) {
-			// Firs the skew & rotation correction.
-			out_x = world2machine_rotation_and_skew_inv[0][0] * x + world2machine_rotation_and_skew_inv[0][1] * y;
-			out_y = world2machine_rotation_and_skew_inv[1][0] * x + world2machine_rotation_and_skew_inv[1][1] * y;
-		}
-	}
-}
-
 inline void machine2world(float &x, float &y)
 {
 	if (world2machine_correction_mode == WORLD2MACHINE_CORRECTION_NONE) {
@@ -119,6 +99,13 @@ inline void machine2world(float &x, float &y)
 			y = out_y;
 		}
 	}
+}
+
+inline void machine2world(float x, float y, float &out_x, float &out_y)
+{
+    out_x = x;
+    out_y = y;
+    machine2world(out_x, out_y);
 }
 
 inline bool world2machine_clamp(float &x, float &y)
