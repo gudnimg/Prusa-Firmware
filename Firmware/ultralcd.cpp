@@ -1025,28 +1025,6 @@ static void lcd_cooldown()
   lcd_return_to_status();
 }
 
-//! @brief append text label with a colon and format it into a fixed size output buffer
-//! It would have been much easier if there was a ':' in the labels.
-//! But since the texts like Bed, Nozzle and PINDA are used in other places
-//! it is better to reuse these texts even though it requires some extra formatting code.
-//! @param [in] ipgmLabel pointer to string in PROGMEM
-//! @param [out] pointer to string in RAM which will receive the formatted text. Must be allocated to appropriate size
-//! @param [in] dstSize allocated length of dst
-static void pgmtext_with_colon(const char *ipgmLabel, char *dst, uint8_t dstSize){
-    uint8_t i = 0;
-    for(; i < dstSize - 2; ++i){ // 2 byte less than buffer, we'd be adding a ':' to the end
-        uint8_t b = pgm_read_byte(ipgmLabel + i);
-        if( ! b )
-            break;
-        dst[i] = b;
-    }
-    dst[i] = ':';               // append the colon
-    ++i;
-    for(; i < dstSize - 1; ++i) // fill the rest with spaces
-        dst[i] = ' ';
-    dst[dstSize-1] = '\0';      // terminate the string properly
-}
-
 //! @brief Show Extruder Info
 //!
 //! @code{.unparsed}
@@ -1322,13 +1300,15 @@ static void lcd_menu_debug()
 #endif /* DEBUG_BUILD */
 
 //! @brief common line print for lcd_menu_temperatures
+//! @param [in] row LCD row to render line (from 0 to 3)
 //! @param [in] ipgmLabel pointer to string in PROGMEM
 //! @param [in] value to be printed behind the label
-static void lcd_menu_temperatures_line(const char *ipgmLabel, int value){
-    static const size_t maxChars = 15;    
-    char tmp[maxChars];
-    pgmtext_with_colon(ipgmLabel, tmp, maxChars);
-    lcd_printf_P(PSTR(" %s%3d\x01 \n"), tmp, value); // no need to add -14.14 to string alignment
+static void lcd_menu_temperatures_line(const uint8_t row, const char *ipgmLabel, int value){
+    lcd_puts_at_P(1, row, ipgmLabel);
+    lcd_putc(':');
+    lcd_set_cursor_column(LCD_WIDTH - 4);
+    lcd_printf_P(PSTR("%3d"), value);
+    lcd_putc(LCD_STR_DEGREE[0]);
 }
 
 //! @brief Show Temperatures
@@ -1346,13 +1326,14 @@ static void lcd_menu_temperatures()
 {
     lcd_timeoutToStatus.stop(); //infinite timeout
     lcd_home();
-    lcd_menu_temperatures_line( _T(MSG_NOZZLE), (int)current_temperature[0] );
-    lcd_menu_temperatures_line( _T(MSG_BED), (int)current_temperature_bed );
+    uint8_t row = 0;
+    lcd_menu_temperatures_line(row++, _T(MSG_NOZZLE), (int)current_temperature[0] );
+    lcd_menu_temperatures_line(row++, _T(MSG_BED), (int)current_temperature_bed );
 #ifdef AMBIENT_THERMISTOR
-    lcd_menu_temperatures_line( _i("Ambient"), (int)current_temperature_ambient );  ////MSG_AMBIENT c=14
+    lcd_menu_temperatures_line(row++, _i("Ambient"), (int)current_temperature_ambient );  ////MSG_AMBIENT c=14
 #endif //AMBIENT_THERMISTOR
 #ifdef PINDA_THERMISTOR
-    lcd_menu_temperatures_line(MSG_PINDA, (int)current_temperature_pinda );  ////MSG_PINDA
+    lcd_menu_temperatures_line(row, MSG_PINDA, (int)current_temperature_pinda );  ////MSG_PINDA
 #endif //PINDA_THERMISTOR
     menu_back_if_clicked();
 }
