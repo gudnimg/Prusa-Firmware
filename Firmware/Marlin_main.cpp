@@ -11339,7 +11339,6 @@ void M600_load_filament_movements()
 }
 
 void M600_load_filament() {
-	//load filament for single material and MMU
 	lcd_wait_interact();
 	KEEPALIVE_STATE(PAUSED_FOR_USER);
 

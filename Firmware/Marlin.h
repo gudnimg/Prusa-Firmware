@@ -444,7 +444,7 @@ void gcode_M701(float fastLoadLength, uint8_t mmuSlotIndex);
 
 #define UVLO !(PINE & (1<<4))
 
-
+/// @brief load filament for single material
 void M600_load_filament();
 
 /// @brief Ask the user if the filament has been unloaded
