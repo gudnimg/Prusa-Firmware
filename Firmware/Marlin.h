@@ -446,6 +446,10 @@ void gcode_M701(float fastLoadLength, uint8_t mmuSlotIndex);
 
 
 void M600_load_filament();
+
+/// @brief Ask the user if the filament has been unloaded
+/// this does not apply to MMU setups
+void M600_user_confirm_unload();
 void M600_load_filament_movements();
 void M600_wait_for_user(float HotendTempBckp);
 void M600_check_state(float nozzle_temp);
