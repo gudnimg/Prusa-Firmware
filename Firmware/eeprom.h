@@ -602,6 +602,12 @@ static Sheets * const EEPROM_Sheets_base = (Sheets*)(EEPROM_SHEETS_BASE);
 #define EEPROM_KILL_MESSAGE (EEPROM_TEMP_MODEL_VER-2) //PGM_P
 #define EEPROM_KILL_PENDING_FLAG (EEPROM_KILL_MESSAGE-1) //uint8
 
+#define EEPROM_MMU_MECHANICAL_FAIL (EEPROM_KILL_PENDING_FLAG - 2) //uint16_t
+#define EEPROM_MMU_TEMPERATURE_FAIL (EEPROM_MMU_MECHANICAL_FAIL - 2) //uint16_t
+#define EEPROM_MMU_ELECTRICAL_FAIL (EEPROM_MMU_TEMPERATURE_FAIL - 2) //uint16_t
+#define EEPROM_MMU_CONNECT_FAIL (EEPROM_MMU_ELECTRICAL_FAIL - 2) //uint16_t
+#define EEPROM_MMU_SYSTEM_FAIL (EEPROM_MMU_CONNECT_FAIL - 2) //uint16_t
+
 //This is supposed to point to last item to allow EEPROM overrun check. Please update when adding new items.
 #define EEPROM_LAST_ITEM EEPROM_KILL_PENDING_FLAG
 // !!!!!

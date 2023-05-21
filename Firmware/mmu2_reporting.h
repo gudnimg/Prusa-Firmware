@@ -60,6 +60,12 @@ void IncrementLoadFails();
 /// Increments EEPROM cell - number of MMU errors
 void IncrementMMUFails();
 
+void IncrementMechanicalFailures();
+void IncrementTemperatureFailures();
+void IncrementElectricalFailures();
+void IncrementConnectFailures();
+void IncrementSystemFailures();
+
 // Beware: enum values intentionally chosen to match the 8bit FW to save code size
 enum SoundType {
     Prompt = 2,

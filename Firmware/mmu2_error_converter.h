@@ -17,6 +17,8 @@ const char *PrusaErrorTitle(uint8_t i);
 /// @param i index of the error - obtained by calling ErrorCodeIndex
 const char *PrusaErrorDesc(uint8_t i);
 
+uint16_t PrusaErrorType(uint8_t i);
+
 /// @returns the actual numerical value of the Prusa-Error-Codes error
 /// @param i index of the error - obtained by calling ErrorCodeIndex
 uint16_t PrusaErrorCode(uint8_t i);

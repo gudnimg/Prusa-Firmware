@@ -50,7 +50,7 @@ MMU2::MMU2()
     , loadFilamentStarted(false)
     , unloadFilamentStarted(false)
     , toolchange_counter(0)
-    , tmcFailures(0) {
+    /*, tmcFailures(0)*/ {
 }
 
 void MMU2::Start() {
@@ -923,23 +923,31 @@ void MMU2::ReportError(ErrorCode ec, ErrorSource res) {
         lastErrorSource = res;
         LogErrorEvent_P(_O(PrusaErrorTitle(PrusaErrorCodeIndex((uint16_t)ec))));
 
-        if (ec != ErrorCode::OK) {
+        uint16_t type = PrusaErrorType(PrusaErrorCodeIndex((uint16_t)ec));
+
+        if (type != 0) // != NO_FAILURE
+        {
             IncrementMMUFails();
-
-            // check if it is a "power" failure - we consider TMC-related errors as power failures
-            static constexpr uint16_t tmcMask =
-                ( (uint16_t)ErrorCode::TMC_IOIN_MISMATCH
-                | (uint16_t)ErrorCode::TMC_RESET
-                | (uint16_t)ErrorCode::TMC_UNDERVOLTAGE_ON_CHARGE_PUMP
-                | (uint16_t)ErrorCode::TMC_SHORT_TO_GROUND
-                | (uint16_t)ErrorCode::TMC_OVER_TEMPERATURE_WARN
-                | (uint16_t)ErrorCode::TMC_OVER_TEMPERATURE_ERROR
-                | (uint16_t)ErrorCode::MMU_SOLDERING_NEEDS_ATTENTION ) & 0x7fffU; // skip the top bit
-            static_assert(tmcMask == 0x7e00); // just make sure we fail compilation if any of the TMC error codes change
-
-            if ((uint16_t)ec & tmcMask) { // @@TODO can be optimized to uint8_t operation
-                // TMC-related errors are from 0x8200 higher
-                IncrementTMCFailures();
+            switch (type)
+            {
+            case 1: // MECHANICAL_FAILURE
+                IncrementMechanicalFailures();
+                break;
+            case 2: // TEMPERATURE_FAILURE
+                IncrementTemperatureFailures();
+                break;
+            case 3: // ELECTRICAL_FAILURE
+                //IncrementTMCFailures();
+                IncrementElectricalFailures();
+                break;
+            case 4: // CONNECT_FAILURE
+                IncrementConnectFailures();
+                break;
+            case 5: // SYSTEM_FAILURE
+                IncrementSystemFailures();
+                break;
+            default:
+                break;
             }
         }
     }

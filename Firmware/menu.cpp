@@ -432,6 +432,19 @@ static void menu_draw_P(const char chr, const char* str, const int16_t val)
 	lcd_printf_P(PSTR("%4d"), val);
 }
 
+// Not ideal implementation, should be made more general
+void menu_item_statistic_P(const char* str, const int16_t value)
+{
+	if (menu_item == menu_line)
+	{
+		if (lcd_draw_update) {
+			lcd_set_cursor(0, menu_row);
+			menu_draw_P(menu_selection_mark(), str, value);
+		}
+	}
+	menu_item++;
+}
+
 //! @brief Draw up to 10 chars of text and a float number in format from +0.0 to +12345.0. The increased range is necessary
 //! for displaying large values of extruder positions, which caused text overflow in the previous implementation.
 //! 

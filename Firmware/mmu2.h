@@ -189,9 +189,9 @@ public:
     /// Set toolchange counter to zero
     inline void ClearToolChangeCounter() { toolchange_counter = 0; };
 
-    inline uint16_t TMCFailures() const { return tmcFailures; }
-    inline void IncrementTMCFailures() { ++tmcFailures; }
-    inline void ClearTMCFailures() { tmcFailures = 0; }
+    //inline uint16_t TMCFailures() const { return tmcFailures; }
+    //inline void IncrementTMCFailures() { ++tmcFailures; }
+    //inline void ClearTMCFailures() { tmcFailures = 0; }
 
 private:
     /// Perform software self-reset of the MMU (sends an X0 command)
@@ -308,7 +308,7 @@ private:
     bool unloadFilamentStarted;
 
     uint16_t toolchange_counter;
-    uint16_t tmcFailures;
+    //uint16_t tmcFailures;
 };
 
 /// following Marlin's way of doing stuff - one and only instance of MMU implementation in the code base

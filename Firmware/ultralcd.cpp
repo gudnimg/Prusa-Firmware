@@ -1128,18 +1128,17 @@ static void lcd_menu_fails_stats_mmu_print() {
 //! @endcode
 static void lcd_menu_fails_stats_mmu_total() {
     lcd_timeoutToStatus.stop(); //infinite timeout
-    lcd_home();
-    lcd_printf_P(
-        PSTR("%S\n"
-             " %-16.16S%-3d\n"
-             " %-16.16S%-3d\n"
-             " %-16.16S%-3d"
-        ),
-        _T(MSG_TOTAL_FAILURES),
-        _T(MSG_MMU_FAILS), clamp999( eeprom_read_word((uint16_t*)EEPROM_MMU_FAIL_TOT) ),
-        _T(MSG_MMU_LOAD_FAILS), clamp999( eeprom_read_word((uint16_t*)EEPROM_MMU_LOAD_FAIL_TOT) ),
-        _T(MSG_MMU_POWER_FAILS), clamp999( MMU2::mmu2.TMCFailures() ));
-    menu_back_if_clicked();
+    MENU_BEGIN();
+    MENU_ITEM_BACK_P(_T(MSG_TOTAL_FAILURES));
+    MENU_ITEM_STATISTIC(_T(MSG_MMU_FAILS), clamp999( eeprom_read_word((uint16_t*)EEPROM_MMU_FAIL_TOT) ));
+    MENU_ITEM_STATISTIC(_T(MSG_MMU_LOAD_FAILS), clamp999( eeprom_read_word((uint16_t*)EEPROM_MMU_LOAD_FAIL_TOT) ));
+    //MENU_ITEM_STATISTIC(_T(MSG_MMU_POWER_FAILS), clamp999( MMU2::mmu2.TMCFailures() ));
+    MENU_ITEM_STATISTIC(PSTR("Mechanical"), clamp999( eeprom_read_word((uint16_t*)EEPROM_MMU_MECHANICAL_FAIL) ));
+    MENU_ITEM_STATISTIC(PSTR("Electrical"), clamp999( eeprom_read_word((uint16_t*)EEPROM_MMU_TEMPERATURE_FAIL) ));
+    MENU_ITEM_STATISTIC(PSTR("Temperature"), clamp999( eeprom_read_word((uint16_t*)EEPROM_MMU_TEMPERATURE_FAIL) ));
+    MENU_ITEM_STATISTIC(PSTR("Connect"), clamp999( eeprom_read_word((uint16_t*)EEPROM_MMU_CONNECT_FAIL) ));
+    MENU_ITEM_STATISTIC(PSTR("System"), clamp999( eeprom_read_word((uint16_t*)EEPROM_MMU_SYSTEM_FAIL) ));
+    MENU_END();
 }
 
 //! @brief Show Total Failures Statistics MMU

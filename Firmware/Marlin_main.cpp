@@ -9598,7 +9598,7 @@ void save_statistics(uint32_t _total_filament_used, uint32_t _total_print_time) 
         eeprom_add_dword((uint32_t *)EEPROM_MMU_MATERIAL_CHANGES, MMU2::mmu2.ToolChangeCounter());
         // @@TODO why were EEPROM_MMU_FAIL_TOT and EEPROM_MMU_LOAD_FAIL_TOT behaving differently - i.e. updated with every change?
         MMU2::mmu2.ClearToolChangeCounter();
-        MMU2::mmu2.ClearTMCFailures(); // not stored into EEPROM
+        //MMU2::mmu2.ClearTMCFailures(); // not stored into EEPROM
     }
 }
 

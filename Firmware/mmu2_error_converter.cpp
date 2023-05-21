@@ -162,6 +162,10 @@ const char * PrusaErrorDesc(uint8_t i){
     return (const char *)pgm_read_ptr(errorDescs + i);
 }
 
+uint16_t PrusaErrorType(uint8_t i){
+    return pgm_read_word(errorType + i);
+}
+
 uint8_t PrusaErrorButtons(uint8_t i){
     return pgm_read_byte(errorButtons + i);
 }

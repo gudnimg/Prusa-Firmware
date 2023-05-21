@@ -298,6 +298,26 @@ void IncrementMMUFails(){
     eeprom_increment_word((uint16_t *)EEPROM_MMU_FAIL_TOT);
 }
 
+void IncrementMechanicalFailures(){
+    eeprom_increment_word((uint16_t *)EEPROM_MMU_MECHANICAL_FAIL);
+}
+
+void IncrementTemperatureFailures(){
+    eeprom_increment_word((uint16_t *)EEPROM_MMU_TEMPERATURE_FAIL);
+}
+
+void IncrementElectricalFailures(){
+    eeprom_increment_word((uint16_t *)EEPROM_MMU_ELECTRICAL_FAIL);
+}
+
+void IncrementConnectFailures(){
+    eeprom_increment_word((uint16_t *)EEPROM_MMU_CONNECT_FAIL);
+}
+
+void IncrementSystemFailures(){
+    eeprom_increment_word((uint16_t *)EEPROM_MMU_SYSTEM_FAIL);
+}
+
 void MakeSound(SoundType s){
     Sound_MakeSound( (eSOUND_TYPE)s);
 }

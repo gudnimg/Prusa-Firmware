@@ -143,6 +143,8 @@ struct SheetFormatBuffer
 
 extern void menu_format_sheet_E(const Sheet &sheet_E, SheetFormatBuffer &buffer);
 
+extern void menu_item_statistic_P(const char* str, const int16_t value);
+#define MENU_ITEM_STATISTIC(str, val) do { menu_item_statistic_P(str, val); } while (0)
 
 #define MENU_ITEM_EDIT_int3_P(str, pval, minval, maxval) do { menu_item_edit_P(str, pval, minval, maxval); } while (0)
 //#define MENU_ITEM_EDIT_int3_P(str, pval, minval, maxval) MENU_ITEM_EDIT(int3, str, pval, minval, maxval)
