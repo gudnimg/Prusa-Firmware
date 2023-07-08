@@ -345,4 +345,12 @@ void ScreenClear(){
     lcd_clear();
 }
 
+bool __attribute__((noinline)) waitForHotendTemp() {
+    return (thermal_degTargetHotend() - thermal_degHotend()) > 5;
+}
+
+void __attribute__((noinline)) WaitForHotendTargetTempBeep() {
+    mmu2.busyLoop(3000, waitForHotendTemp);
+    MakeSound(Prompt);
+}
 } // namespace MMU2

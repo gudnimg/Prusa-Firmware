@@ -190,6 +190,16 @@ public:
     inline void IncrementTMCFailures() { ++tmcFailures; }
     inline void ClearTMCFailures() { tmcFailures = 0; }
 
+    /// @brief a blocking while loop running according to some condition
+    /// which will run a certain function pointer and also maintaining
+    /// the MMU communication state machine. Errors reported by the MMU
+    /// are ignored so to block the MMU error screen from rendering.
+    /// @param delay Call interval for func and LCD refresh rate (in milliseconds)
+    /// @param cond address to a function, the busy loop continues to run while this returns true
+    /// @param func address to a custom function to run in the busy loop.
+    /// It can also be a 'no-capture lambda' as it will behave like a function pointer
+    void busyLoop(uint16_t delay, bool (*cond)(void), void (*func)(void) = nullptr);
+
 private:
     /// Perform software self-reset of the MMU (sends an X0 command)
     void ResetX0();

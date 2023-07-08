@@ -22,19 +22,6 @@ constexpr float MMM_TO_MMS(float MM_M) { return MM_M / 60.0f; }
 
 namespace MMU2 {
 
-template <typename F>
-void waitForHotendTargetTemp(uint16_t delay, F f) {
-    while (((thermal_degTargetHotend() - thermal_degHotend()) > 5)) {
-        f();
-        safe_delay_keep_alive(delay);
-    }
-}
-
-void WaitForHotendTargetTempBeep() {
-    waitForHotendTargetTemp(3000, []{ });
-    MakeSound(Prompt);
-}
-
 MMU2 mmu2;
 
 MMU2::MMU2()
@@ -174,6 +161,17 @@ void __attribute__((noinline)) MMU2::mmu_loop_inner(bool reportErrors) {
         // Call this every iteration to keep the knob rotation responsive
         // This includes when mmu_loop is called within manage_response
         ReportErrorHook((CommandInProgress)logic.CommandInProgress(), (uint16_t)lastErrorCode, uint8_t(lastErrorSource));
+    }
+}
+
+void __attribute__((noinline)) MMU2::busyLoop(uint16_t delay, bool (*cond)(void), void (*func)(void)) {
+    if(!cond) return;
+    while (cond()) {
+        safe_delay_keep_alive(delay);
+        // Maintain MMU communications but ignore any reported
+        // errors. Let the printer finish heating.
+        mmu_loop_inner(false);
+        if(func) func();
     }
 }
 
@@ -394,7 +392,7 @@ bool MMU2::tool_change(char code, uint8_t slot) {
 
     switch (code) {
     case '?': {
-        waitForHotendTargetTemp(100, [] {});
+        busyLoop(100, waitForHotendTemp);
         load_filament_to_nozzle(slot);
     } break;
 
@@ -405,7 +403,7 @@ bool MMU2::tool_change(char code, uint8_t slot) {
     } break;
 
     case 'c': {
-        waitForHotendTargetTemp(100, [] {});
+        busyLoop(100, waitForHotendTemp);
         execute_load_to_nozzle_sequence();
     } break;
     }
@@ -651,9 +649,7 @@ void MMU2::ResumeHotendTemp() {
         FullScreenMsgRestoringTemperature();
         //@todo better report the event and let the GUI do its work somewhere else
         ReportErrorHookSensorLineRender();
-        waitForHotendTargetTemp(100, [] {
-            marlin_manage_inactivity(true);
-            mmu2.mmu_loop_inner(false);
+        busyLoop(100, waitForHotendTemp, [] {
             ReportErrorHookDynamicRender();
         });
         ScreenUpdateEnable(); // temporary hack to stop this locking the printer...

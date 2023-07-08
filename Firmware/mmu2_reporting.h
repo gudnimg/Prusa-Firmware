@@ -79,5 +79,7 @@ void FullScreenMsgRestoringTemperature();
 
 void ScreenUpdateEnable();
 void ScreenClear();
+bool waitForHotendTemp();
+void WaitForHotendTargetTempBeep();
 
 } // namespace
