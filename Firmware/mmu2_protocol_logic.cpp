@@ -803,11 +803,7 @@ StepStatus ProtocolLogic::Step() {
         }
     } break;
     case CommandRejected:
-        // we have to repeat it - that's the only thing we can do
-        // no change in state
-        // @@TODO wait until Q0 returns command in progress finished, then we can send this one
         LogError(PSTR("Command rejected"));
-        CommandRestart();
         break;
     case CommandError:
         LogError(PSTR("Command Error"));
