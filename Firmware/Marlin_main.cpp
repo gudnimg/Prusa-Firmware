@@ -1462,7 +1462,6 @@ void setup()
 
 	//mbl_mode_init();
 	mbl_settings_init();
-	eeprom_init_default_byte((uint8_t*)EEPROM_MMU_STEALTH, 1);
 
 #if (!defined(DEBUG_DISABLE_FANCHECK) && defined(FANCHECK) && defined(TACH_1) && (TACH_1 >-1))
 	setup_fan_interrupt();

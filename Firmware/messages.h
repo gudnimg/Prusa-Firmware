@@ -147,7 +147,6 @@ extern const char MSG_GCODE_DIFF_CANCELLED[];
 extern const char MSG_NOZZLE_DIFFERS_CONTINUE[];
 extern const char MSG_NOZZLE_DIFFERS_CANCELLED[];
 extern const char MSG_NOZZLE_DIAMETER[];
-extern const char MSG_MMU_MODE[];
 extern const char MSG_SD_CARD[];
 extern const char MSG_SORT[];
 extern const char MSG_SORT_TIME[];

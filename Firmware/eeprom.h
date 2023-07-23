@@ -239,8 +239,7 @@ static_assert(sizeof(Sheets) == EEPROM_SHEETS_SIZEOF, "Sizeof(Sheets) is not EEP
 | 0x0DAA 3498 | uint8   | EEPROM_MBL_PROBE_NR                   | 03h 3        | ffh 255               | MBL times measurements for each point: __3__      | LCD menu     | D3 Ax0daa C1
 | ^           | ^       | ^                                     | 05h 5        | ^                     | MBL times measurements for each point: __5__      | ^            | ^
 | ^           | ^       | ^                                     | 01h 1        | ^                     | MBL times measurements for each point: __1__      | ^            | ^
-| 0x0DA9 3497 | uint8   | EEPROM_MMU_STEALTH                    | 01h 1        | ffh 255               | MMU2/s Silent mode: __on__                        | ???          | D3 Ax0da9 C1
-| ^           | ^       | ^                                     | 00h 0        | ^                     | MMU2/s Silent mode: __off__                       | ^            | ^
+| 0x0DA9 3497 | uint8   | UNUSED                                | 01h 1        | ffh 255               |                                                   | ???          | D3 Ax0da9 C1
 | 0x0DA8 3496 | uint8   | EEPROM_CHECK_MODE                     | 01h 1        | ffh 255               | Check mode for nozzle is: __warn__                | LCD menu     | D3 Ax0da8 C1
 | ^           | ^       | ^                                     | 02h 2        | ^                     | Check mode for nozzle is: __strict__              | ^            | ^
 | ^           | ^       | ^                                     | 00h 0        | ^                     | Check mode for nozzle is: __none__                | ^            | ^
@@ -542,7 +541,7 @@ static_assert(sizeof(Sheets) == EEPROM_SHEETS_SIZEOF, "Sizeof(Sheets) is not EEP
 #define EEPROM_MBL_POINTS_NR (EEPROM_MBL_MAGNET_ELIMINATION -1) //uint8_t number of points in one exis for mesh bed leveling
 #define EEPROM_MBL_PROBE_NR (EEPROM_MBL_POINTS_NR-1) //number of measurements for each point
 
-#define EEPROM_MMU_STEALTH (EEPROM_MBL_PROBE_NR-1)
+#define EEPROM_MMU_STEALTH (EEPROM_MBL_PROBE_NR-1) // uint8 unused
 
 #define EEPROM_CHECK_MODE (EEPROM_MMU_STEALTH-1) // uint8
 #define EEPROM_NOZZLE_DIAMETER (EEPROM_CHECK_MODE-1) // uint8
