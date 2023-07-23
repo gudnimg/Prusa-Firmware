@@ -440,7 +440,6 @@ StepStatus ProtocolLogic::IdleStep() {
         case RequestMsgCodes::Cut:
         case RequestMsgCodes::Eject:
         case RequestMsgCodes::Load:
-        case RequestMsgCodes::Mode:
         case RequestMsgCodes::Tool:
         case RequestMsgCodes::Unload:
             if (rsp.paramCode != ResponseMsgParamCodes::Finished) {

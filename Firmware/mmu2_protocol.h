@@ -16,7 +16,6 @@ enum class RequestMsgCodes : uint8_t {
     Query = 'Q',
     Tool = 'T',
     Load = 'L',
-    Mode = 'M',
     Unload = 'U',
     Reset = 'X',
     Finda = 'P',

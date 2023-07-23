@@ -33,7 +33,6 @@ DecodeStatus Protocol::DecodeRequest(uint8_t c) {
         case 'Q':
         case 'T':
         case 'L':
-        case 'M':
         case 'U':
         case 'X':
         case 'P':
@@ -161,7 +160,6 @@ DecodeStatus Protocol::DecodeResponse(uint8_t c) {
         case 'Q':
         case 'T':
         case 'L':
-        case 'M':
         case 'U':
         case 'X':
         case 'P':
