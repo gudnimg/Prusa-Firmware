@@ -1110,11 +1110,6 @@ msgstr "MMU FW WYMAGA AKTUAL"
 msgid "MMU Firmware internal error, please reset the MMU."
 msgstr "Blad wewnetrzny MMU FW, zresetuj MMU."
 
-#. MSG_MMU_MODE c=8
-#: ../../Firmware/messages.cpp:145 ../../Firmware/ultralcd.cpp:4085
-msgid "MMU Mode"
-msgstr "Tryb MMU"
-
 #. MSG_TITLE_MMU_NOT_RESPONDING c=20
 #: ../../Firmware/mmu2/errors_list.h:177 ../../Firmware/mmu2/errors_list.h:223
 msgid "MMU NOT RESPONDING"

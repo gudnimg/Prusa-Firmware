@@ -1104,11 +1104,6 @@ msgstr "MMU FV OPPDAT. NØDVE"
 msgid "MMU Firmware internal error, please reset the MMU."
 msgstr "MMU fastvare intern feil, vennligst nullstill MMU-en."
 
-#. MSG_MMU_MODE c=8
-#: ../../Firmware/messages.cpp:145 ../../Firmware/ultralcd.cpp:4085
-msgid "MMU Mode"
-msgstr "MMU Mod."
-
 #. MSG_TITLE_MMU_NOT_RESPONDING c=20
 #: ../../Firmware/mmu2/errors_list.h:177 ../../Firmware/mmu2/errors_list.h:223
 msgid "MMU NOT RESPONDING"
