@@ -235,12 +235,16 @@ function(git_describe_working_tree _var)
         return()
     endif()
     git_head_commit_number(COMMIT_COUNT) #Bake the commit count into the full DSC
+
+    message(STATUS "COMMAND: ${GIT_EXECUTABLE} describe --abbrev=0 --dirty=-D --broken=-B ${ARGN}")
     execute_process(
         COMMAND "${GIT_EXECUTABLE}" describe --abbrev=0 --dirty=-D --broken=-B ${ARGN}
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         RESULT_VARIABLE res
         OUTPUT_VARIABLE out
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    message(STATUS "Result = ${res}")
+    message(STATUS "Output = ${out}")
     if(NOT res EQUAL 0)
         message(STATUS "line 244")
         set(out "${out}-${res}-NOTFOUND")
