@@ -106,7 +106,7 @@ jobs:
     - name: test git command
       run: |
           git --version
-          where git
+          which git
 
     - name: Run check
       run: |
