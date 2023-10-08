@@ -185,12 +185,14 @@ function(git_describe _var)
         set(${_var}
             "GIT-NOTFOUND"
             PARENT_SCOPE)
+        message(STATUS "return 188")
         return()
     endif()
     if(NOT hash)
         set(${_var}
             "HEAD-HASH-NOTFOUND"
             PARENT_SCOPE)
+        message(STATUS "return 195")
         return()
     endif()
 
@@ -211,6 +213,7 @@ function(git_describe _var)
         OUTPUT_VARIABLE out
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
     if(NOT res EQUAL 0)
+    message(STATUS "line 216")
         set(out "${out}-${res}-NOTFOUND")
     endif()
 
@@ -227,6 +230,7 @@ function(git_describe_working_tree _var)
         set(${_var}
             "GIT-NOTFOUND"
             PARENT_SCOPE)
+        message(STATUS "return 233")
         return()
     endif()
     git_head_commit_number(COMMIT_COUNT) #Bake the commit count into the full DSC
@@ -237,11 +241,14 @@ function(git_describe_working_tree _var)
         OUTPUT_VARIABLE out
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
     if(NOT res EQUAL 0)
+        message(STATUS "line 244")
         set(out "${out}-${res}-NOTFOUND")
     endif()
     if( "${out}" MATCHES "-D\$")
+        message(STATUS "return 248")
         STRING(REPLACE "-D" "-${COMMIT_COUNT}-D" out "${out}")
     else()
+        message(STATUS "line 251")
         set(out "${out}-${COMMIT_COUNT}")
     endif()
     set(${_var}
