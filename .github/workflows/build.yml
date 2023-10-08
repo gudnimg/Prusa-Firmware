@@ -104,7 +104,8 @@ jobs:
       run: sudo chmod -R 744 .dependencies
 
     - name: test git command
-      run: git --version
+      run: |
+          git --version
           where git
 
     - name: Run check
