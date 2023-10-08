@@ -103,6 +103,9 @@ jobs:
     - name: Cache permissions
       run: sudo chmod -R 744 .dependencies
 
+    - name: test git command
+      run: git --version
+
     - name: Run check
       run: |
           mkdir build
