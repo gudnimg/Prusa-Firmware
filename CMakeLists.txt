@@ -339,6 +339,9 @@ if(CMAKE_CROSSCOMPILING)
   add_compile_options(-flto -fno-fat-lto-objects)
   add_link_options(-flto)
 
+  # Call Prologues/Epilogues to reduce code size
+  add_compile_options(-mcall-prologues)
+
   # Create this target before we apply the GC options
   add_library(avr_core STATIC ${AVR_SOURCES})
   set_reproducible_target(avr_core)
