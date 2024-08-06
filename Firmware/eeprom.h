@@ -32,7 +32,7 @@ typedef struct
     int16_t z_offset; //!< Z_BABYSTEP_MIN .. Z_BABYSTEP_MAX = Z_BABYSTEP_MIN*2/1000 [mm] .. Z_BABYSTEP_MAX*2/1000 [mm]
     uint8_t bed_temp; //!< 0 .. 254 [°C] NOTE: currently only written-to and never used
     uint8_t pinda_temp; //!< 0 .. 254 [°C] NOTE: currently only written-to and never used
-} Sheet;
+} __attribute__((packed)) Sheet;
 
 typedef struct
 {
@@ -44,6 +44,7 @@ typedef struct
 #define EEPROM_SHEETS_SIZEOF 89
 
 #ifdef __cplusplus
+static_assert(sizeof(Sheet) == 11, "Sizeof(Sheet) is not 11.");
 static_assert(sizeof(Sheets) == EEPROM_SHEETS_SIZEOF, "Sizeof(Sheets) is not EEPROM_SHEETS_SIZEOF.");
 #endif
 /** @defgroup eeprom_table EEPROM Table
