@@ -14,8 +14,8 @@ set(TEST_SOURCES
 	)
 
 add_executable(tests ${TEST_SOURCES})
-target_include_directories(tests PRIVATE tests)
-target_link_libraries(tests Catch2::Catch2WithMain)
+target_include_directories(tests PRIVATE ../Firmware)
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 catch_discover_tests(tests)
 
 set(ctest_test_args --output-on-failure)
