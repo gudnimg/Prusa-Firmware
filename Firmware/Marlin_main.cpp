@@ -1078,7 +1078,7 @@ void setup()
     farm_mode_init();
 
 #ifdef TMC2130
-    if(FarmOrUserECool()) {
+    if(UserECoolEnabled()) {
         //increased extruder current (PFW363)
         currents[E_AXIS].setiRun(TMC2130_CURRENTS_FARM);
         currents[E_AXIS].setiHold(TMC2130_CURRENTS_FARM);
@@ -1308,7 +1308,7 @@ void setup()
 #ifdef TMC2130
 	tmc2130_mode = silentMode?TMC2130_MODE_SILENT:TMC2130_MODE_NORMAL;
 	update_mode_profile();
-	tmc2130_init(TMCInitParams(false, FarmOrUserECool() ));
+	tmc2130_init(TMCInitParams(false, UserECoolEnabled() ));
 #endif //TMC2130
 #ifdef PSU_Delta
      init_force_z();                              // ! important for correct Z-axis initialization
@@ -2267,7 +2267,7 @@ void change_power_mode_live(uint8_t mode)
 		cli();
 		tmc2130_mode = mode;
 		update_mode_profile();
-		tmc2130_init(TMCInitParams(FarmOrUserECool()));
+		tmc2130_init(TMCInitParams(UserECoolEnabled()));
     // We may have missed a stepper timer interrupt due to the time spent in the tmc2130_init() routine.
     // Be safe than sorry, reset the stepper timer before re-enabling interrupts.
     st_reset_timer();
@@ -7486,7 +7486,7 @@ void process_commands()
         // See tmc2130_cur2val() for translation to 0 .. 63 range
         for (uint_least8_t i = 0; i < NUM_AXIS; i++){
             if(code_seen(axis_codes[i])){
-                if( i == E_AXIS && FarmOrUserECool() ){
+                if( i == E_AXIS && UserECoolEnabled() ){
                     SERIAL_ECHORPGM(eMotorCurrentScalingEnabled);
                     SERIAL_ECHOLNPGM(", M907 E ignored");
                     continue;
@@ -7548,7 +7548,7 @@ void process_commands()
     */
 	case 910:
     {
-		tmc2130_init(TMCInitParams(false, FarmOrUserECool()));
+		tmc2130_init(TMCInitParams(false, UserECoolEnabled()));
     }
     break;
 
@@ -10395,7 +10395,7 @@ void disable_force_z()
 #ifdef TMC2130
     tmc2130_mode=TMC2130_MODE_SILENT;
     update_mode_profile();
-    tmc2130_init(TMCInitParams(true, FarmOrUserECool()));
+    tmc2130_init(TMCInitParams(true, UserECoolEnabled()));
 #endif // TMC2130
 }
 
@@ -10409,7 +10409,7 @@ bEnableForce_z=true;
 #ifdef TMC2130
 tmc2130_mode=eeprom_read_byte((uint8_t*)EEPROM_SILENT)?TMC2130_MODE_SILENT:TMC2130_MODE_NORMAL;
 update_mode_profile();
-tmc2130_init(TMCInitParams(true, FarmOrUserECool()));
+tmc2130_init(TMCInitParams(true, UserECoolEnabled()));
 #endif // TMC2130
 
 WRITE(Z_ENABLE_PIN,Z_ENABLE_ON);                  // slightly redundant ;-p
