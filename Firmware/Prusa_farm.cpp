@@ -10,6 +10,7 @@
 #include "language.h"
 #include "lcd.h"
 #include "stopwatch.h"
+#include "stepper.h"
 
 #ifdef PRUSA_FARM
 uint8_t farm_mode = 0;
@@ -449,8 +450,7 @@ bool farm_prusa_code_seen() {
 void farm_gcode_g98() {
     farm_mode = 1;
     eeprom_update_byte_notify((unsigned char *)EEPROM_FARM_MODE, farm_mode);
-    SilentModeMenu = SILENT_MODE_OFF;
-    eeprom_update_byte_notify((unsigned char *)EEPROM_SILENT, SilentModeMenu);
+    st_update_stepper_mode(SILENT_MODE_OFF);
     fCheckModeInit(); // alternatively invoke printer reset
 }
 
