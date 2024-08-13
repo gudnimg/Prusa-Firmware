@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include "Configuration_var.h"
 
-//mode
-extern uint8_t tmc2130_mode;
 //microstep resolution (0 means 256usteps, 8 means 1ustep
 extern uint8_t tmc2130_mres[4];
 
@@ -18,9 +16,6 @@ extern uint8_t tmc2130_sg_crash; //crash mask
 extern uint8_t tmc2130_sg_homing_axes_mask;
 
 extern const char eMotorCurrentScalingEnabled[];
-
-#define TMC2130_MODE_NORMAL 0
-#define TMC2130_MODE_SILENT 1
 
 #define TMC2130_WAVE_FAC1000_MIN  30
 #define TMC2130_WAVE_FAC1000_MAX 200

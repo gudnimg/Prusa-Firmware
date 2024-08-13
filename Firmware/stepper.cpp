@@ -104,6 +104,7 @@ static_assert(TMC2130_MINIMUM_DELAY 1, // this will fail to compile when non-emp
 //=============================public variables  ============================
 //===========================================================================
 block_t *current_block;  // A pointer to the block currently being traced
+StepperMode stepper_mode; // Motor mode
 
 //===========================================================================
 //=============================private variables ============================
@@ -181,6 +182,11 @@ extern uint16_t stepper_timer_overflow_last;
 //===========================================================================
 //=============================functions         ============================
 //===========================================================================
+
+void st_update_stepper_mode(StepperMode mode) {
+  stepper_mode = mode;
+  eeprom_update_byte_notify((uint8_t *)EEPROM_SILENT, (uint8_t)mode);
+}
 
 void checkHitEndstops()
 {
@@ -559,7 +565,7 @@ FORCE_INLINE void stepper_check_endstops()
         #ifdef TMC2130_SG_HOMING
           // Stall guard homing turned on
 #ifdef TMC2130_STEALTH_Z
-          if ((tmc2130_mode == TMC2130_MODE_SILENT) && !(tmc2130_sg_homing_axes_mask & 0x04))
+          if ((stepper_mode == StepperMode::STEALTH) && !(tmc2130_sg_homing_axes_mask & 0x04))
             SET_BIT_TO(_endstop, Z_AXIS, (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING));
           else
 #endif //TMC2130_STEALTH_Z
@@ -581,7 +587,7 @@ FORCE_INLINE void stepper_check_endstops()
         #ifdef TMC2130_SG_HOMING
         // Stall guard homing turned on
 #ifdef TMC2130_STEALTH_Z
-        if ((tmc2130_mode == TMC2130_MODE_SILENT) && !(tmc2130_sg_homing_axes_mask & 0x04))
+        if ((stepper_mode == StepperMode::STEALTH) && !(tmc2130_sg_homing_axes_mask & 0x04))
           SET_BIT_TO(_endstop, Z_AXIS + 4, 0);
         else
 #endif //TMC2130_STEALTH_Z
@@ -614,7 +620,7 @@ FORCE_INLINE void stepper_check_endstops()
       #ifdef TMC2130_SG_HOMING
       // Stall guard homing turned on
 #ifdef TMC2130_STEALTH_Z
-      if ((tmc2130_mode == TMC2130_MODE_SILENT) && !(tmc2130_sg_homing_axes_mask & 0x04))
+      if ((stepper_mode == StepperMode::STEALTH) && !(tmc2130_sg_homing_axes_mask & 0x04))
         SET_BIT_TO(_endstop, Z_AXIS, (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING));
       else
 #endif //TMC2130_STEALTH_Z
@@ -1482,12 +1488,10 @@ void digitalPotWrite(int address, int value) // From Arduino DigitalPotControl e
 void st_current_init() //Initialize Digipot Motor Current
 {
 #ifdef MOTOR_CURRENT_PWM_XY_PIN
-  uint8_t SilentMode = eeprom_read_byte((uint8_t*)EEPROM_SILENT);
-  SilentModeMenu = SilentMode;
     SET_OUTPUT(MOTOR_CURRENT_PWM_XY_PIN);
     SET_OUTPUT(MOTOR_CURRENT_PWM_Z_PIN);
     SET_OUTPUT(MOTOR_CURRENT_PWM_E_PIN);
-    if((SilentMode == SILENT_MODE_OFF) || (farm_mode) ){
+    if((stepper_mode == StepperMode::NORMAL) || (farm_mode) ){
 
      motor_current_setting[0] = motor_current_setting_loud[0];
      motor_current_setting[1] = motor_current_setting_loud[1];

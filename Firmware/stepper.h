@@ -30,6 +30,18 @@
 extern bool abort_on_endstop_hit;
 #endif
 
+// On TMC2130 printers we have either Normal or Stealth mode.
+// On non-TMC2130 printers we have Normal (Power), Stealth (Silent), and Auto mode.
+enum class StepperMode : uint8_t {
+  NORMAL = 0,
+  STEALTH = 1,
+  AUTO = 2,
+};
+
+extern StepperMode stepper_mode;
+
+void st_update_stepper_mode(StepperMode mode);
+
 // Initialize and start the stepper motor subsystem
 void st_init();
 

@@ -1302,15 +1302,11 @@ void reset_acceleration_rates()
 }
 
 #ifdef TMC2130
-void update_mode_profile()
-{
-	if (tmc2130_mode == TMC2130_MODE_NORMAL)
-	{
+void update_mode_profile() {
+	if (stepper_mode == StepperMode::NORMAL) {
 		max_feedrate = cs.max_feedrate_normal;
 		max_acceleration_mm_per_s2 = cs.max_acceleration_mm_per_s2_normal;
-	}
-	else if (tmc2130_mode == TMC2130_MODE_SILENT)
-	{
+	} else { // Silent mode
 		max_feedrate = cs.max_feedrate_silent;
 		max_acceleration_mm_per_s2 = cs.max_acceleration_mm_per_s2_silent;
 	}
