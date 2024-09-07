@@ -4866,16 +4866,13 @@ void unload_filament(float unloadLength)
         st_synchronize();
     }
 
-	lcd_display_message_fullscreen_P(_T(MSG_PULL_OUT_FILAMENT));
-
-	//disable extruder steppers so filament can be removed
+	// disable extruder steppers so filament can be removed
 	disable_e0();
-	_delay(100);
+
+	lcd_display_message_fullscreen_P(_T(MSG_PULL_OUT_FILAMENT));
 
 	Sound_MakeSound(e_SOUND_TYPE_StandardPrompt);
 	lcd_wait_for_click(5000);
-	st_synchronize();
-	while (lcd_clicked()) delay_keep_alive(100);
 
 	lcd_update_enable(true);
 
