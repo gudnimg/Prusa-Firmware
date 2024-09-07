@@ -3922,8 +3922,8 @@ void lcd_wizard(WizState state)
 		case S::Preheat:
 			lcd_show_fullscreen_message_and_wait_P(_T(MSG_SEL_PREHEAT_TEMP));
 			menu_goto(lcd_preheat_menu, 0, true);
-		    end = true; // Leave wizard temporarily for lcd_preheat_menu
-		    break;
+			end = true; // Leave wizard temporarily for lcd_preheat_menu
+			break;
 		case S::LoadFilHot:
 		    wait_preheat();
 			lcd_wizard_load();
