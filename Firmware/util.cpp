@@ -219,7 +219,7 @@ bool show_upgrade_dialog_if_version_newer(const char *version_string)
         Sound_MakeCustom(50,1000,false);
         delay_keep_alive(500);
         Sound_MakeCustom(50,1000,false);
-        lcd_wait_for_click_delay(30);
+        lcd_wait_for_click(30000);
         lcd_update_enable(true);
         lcd_clear();
         lcd_update(0);

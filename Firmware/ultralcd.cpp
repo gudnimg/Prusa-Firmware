@@ -2988,19 +2988,15 @@ void lcd_show_fullscreen_message_and_wait_P(const char *msg)
 			// Display the confirm char.
 			lcd_putc_at(19, 3, LCD_STR_CONFIRM[0]);
 		}
+
         // Wait for 5 seconds before displaying the next text.
-        for (uint8_t i = 0; i < 100; ++ i) {
-            delay_keep_alive(50);
-            if (lcd_clicked()) {
-				if (msg_next == NULL) {
-					KEEPALIVE_STATE(IN_HANDLER);
-					return;
-				}
-				else {
-					break;
-				}
+        if(lcd_wait_for_click(5000)) {
+            if (msg_next == NULL) {
+                KEEPALIVE_STATE(IN_HANDLER);
+                return;
             }
         }
+
         if (multi_screen) {
             if (msg_next == NULL)
                 msg_next = msg;
@@ -3009,29 +3005,20 @@ void lcd_show_fullscreen_message_and_wait_P(const char *msg)
     }
 }
 
-bool lcd_wait_for_click_delay(uint16_t nDelay)
-// nDelay :: timeout [s] (0 ~ no timeout)
-// true ~ clicked, false ~ delayed
-{
-bool bDelayed;
-long nTime0 = _millis()/1000;
-	lcd_consume_click();
-	KEEPALIVE_STATE(PAUSED_FOR_USER);
+bool lcd_wait_for_click(uint32_t timeout_ms) {
+    int8_t busy_state_backup = busy_state;
+    LongTimer time_start_ms;
+    time_start_ms.start();
+    lcd_consume_click();
+    KEEPALIVE_STATE(PAUSED_FOR_USER);
     for (;;) {
-        manage_heater();
-        manage_inactivity(true);
-        bDelayed = ((_millis()/1000-nTime0) > nDelay);
-        bDelayed = (bDelayed && (nDelay != 0));   // 0 ~ no timeout, always waiting for click
-        if (lcd_clicked() || bDelayed) {
-			KEEPALIVE_STATE(IN_HANDLER);
-            return(!bDelayed);
+        delay_keep_alive(0);
+
+        if (bool did_timeout = time_start_ms.expired_cont(timeout_ms); lcd_clicked() || did_timeout) {
+            KEEPALIVE_STATE(busy_state_backup);
+            return !did_timeout;
         }
     }
-}
-
-void lcd_wait_for_click()
-{
-lcd_wait_for_click_delay(0);
 }
 
 //! @brief Show multiple screen message with yes and no possible choices and wait with possible timeout
@@ -3641,13 +3628,7 @@ void lcd_v2_calibration() {
 
 		if (!loaded) {
 			lcd_display_message_fullscreen_P(_T(MSG_PLEASE_LOAD_PLA));
-			lcd_consume_click();
-			for (uint_least8_t i = 0; i < 20; i++) { //wait max. 2s
-				delay_keep_alive(100);
-				if (lcd_clicked()) {
-					break;
-				}
-			}
+			lcd_wait_for_click(2000);
 			lcd_update_enabled = true;
 			menu_back();
 			return;
@@ -4892,11 +4873,7 @@ void unload_filament(float unloadLength)
 	_delay(100);
 
 	Sound_MakeSound(e_SOUND_TYPE_StandardPrompt);
-	uint8_t counterBeep = 0;
-	while (!lcd_clicked() && (counterBeep < 50)) {
-		delay_keep_alive(100);
-		counterBeep++;
-	}
+	lcd_wait_for_click(5000);
 	st_synchronize();
 	while (lcd_clicked()) delay_keep_alive(100);
 
@@ -5942,7 +5919,7 @@ void lcd_belttest()
 			lcd_set_cursor(10, 3);
 			lcd_print(Y);
 			lcd_putc_at(19, 3, LCD_STR_UPLEVEL[0]);
-			lcd_wait_for_click_delay(10);
+			lcd_wait_for_click(10000);
 		}
     }
 

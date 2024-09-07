@@ -254,7 +254,7 @@ uint32_t IP_address = 0;
 //===========================================================================
 //=============================Private Variables=============================
 //===========================================================================
-#define MSG_BED_LEVELING_FAILED_TIMEOUT 30
+#define MSG_BED_LEVELING_FAILED_TIMEOUT_MS 30000
 
 const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
@@ -2782,10 +2782,10 @@ static void gcode_G80()
         do   {                             // repeat until Z-leveling o.k.
             lcd_display_message_fullscreen_P(_T(MSG_ZLEVELING_ENFORCED));
 #ifdef TMC2130
-            lcd_wait_for_click_delay(MSG_BED_LEVELING_FAILED_TIMEOUT);
+            lcd_wait_for_click(MSG_BED_LEVELING_FAILED_TIMEOUT_MS);
             calibrate_z_auto();           // Z-leveling (X-assembly stay up!!!)
 #else // TMC2130
-            lcd_wait_for_click_delay(0);  // ~ no timeout
+            lcd_wait_for_click();  // ~ no timeout
             lcd_calibrate_z_end_stop_manual(true); // Z-leveling (X-assembly stay up!!!)
 #endif // TMC2130
             // ~ Z-homing (can not be used "G28", because X & Y-homing would have been done before (Z-homing))
@@ -4730,10 +4730,10 @@ void process_commands()
     case 0:
     case 1: {
         const char *src = strchr_pointer + 2;
-        codenum = 0;
+        codenum = 0; // by default, no timeout
         if (code_seen('P')) codenum = code_value_long(); // milliseconds to wait
         if (code_seen('S')) codenum = code_value_long() * 1000; // seconds to wait
-        bool expiration_time_set = bool(codenum);
+        const bool expiration_time_set = bool(codenum);
 
         while (*src == ' ') ++src;
         custom_message_type = CustomMsg::M0Wait;
@@ -4752,16 +4752,7 @@ void process_commands()
         st_synchronize();
         menu_set_block(MENU_BLOCK_STATUS_SCREEN_M0);
         previous_millis_cmd.start();
-        if (expiration_time_set) {
-            codenum += _millis();  // keep track of when we started waiting
-            KEEPALIVE_STATE(PAUSED_FOR_USER);
-            while(_millis() < codenum && !lcd_clicked()) {
-                delay_keep_alive(0);
-            }
-            KEEPALIVE_STATE(IN_HANDLER);
-        } else {
-            marlin_wait_for_click();
-        }
+        lcd_wait_for_click(codenum);
         menu_unset_block(MENU_BLOCK_STATUS_SCREEN_M0);
         if (IS_SD_PRINTING)
             custom_message_type = CustomMsg::Status;
@@ -10358,22 +10349,6 @@ void M600_load_filament(const char* filament_name) {
 	M600_load_filament_movements(filament_name);
 
 	Sound_MakeCustom(50,1000,false);
-}
-
-
-//! @brief Wait for click
-//!
-//! Set
-void marlin_wait_for_click()
-{
-    int8_t busy_state_backup = busy_state;
-    KEEPALIVE_STATE(PAUSED_FOR_USER);
-    lcd_consume_click();
-    while(!lcd_clicked())
-    {
-        delay_keep_alive(0);
-    }
-    KEEPALIVE_STATE(busy_state_backup);
 }
 
 #ifdef PSU_Delta
