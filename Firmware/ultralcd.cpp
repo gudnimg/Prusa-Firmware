@@ -5682,9 +5682,7 @@ void lcd_print_stop_finish()
             // The print was aborted while when the nozzle was cold:
             //     1. in a paused state                      => a partial backup in RAM is always available
             //     2. after a recoverable thermal/fan error had paused the print => only extruder temperature is saved to RAM
-            if (printingIsPaused())
-            {
-                // Restore temperature saved in ram after pausing print
+            if (did_pause_print) {
                 restore_extruder_temperature_from_ram();
             }
 
