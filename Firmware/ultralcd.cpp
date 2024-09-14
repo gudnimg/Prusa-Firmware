@@ -5676,7 +5676,7 @@ void lcd_print_stop_finish()
 
         if (MMU2::mmu2.Enabled() && MMU2::mmu2.FindaDetectsFilament()
 #ifdef FANCHECK
-            && fan_check_error != EFCE_REPORTED
+            && fan_check_error == EFCE_OK
 #endif //FANCHECK
         ) {
             // The print was aborted while when the nozzle was cold:
